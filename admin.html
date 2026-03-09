@@ -1,0 +1,1189 @@
+--- START OF FILE Paste March 04, 2026 - 11:04PM ---
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pizza Storage Admin</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --bg:#0d0d0d;--card:#161616;--card2:#1c1c1c;
+  --primary:#00e676;--secondary:#ff6d00;--danger:#ff4444;
+  --warning:#ffb300;--info:#29b6f6;
+  --border:#2a2a2a;--border2:#333;--text:#f0f0f0;--dim:#888;--input:#1a1a1a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.topnav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#111;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-brand{font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--primary);letter-spacing:2px}
+.nav-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.nav-tab{padding:7px 16px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:.85rem;border-radius:6px;transition:all .2s}
+.nav-tab.active{background:var(--primary);color:#000;font-weight:600}
+.nav-tab:hover:not(.active){background:#1e1e1e;color:var(--text)}
+
+.page{display:none;padding:24px 28px}
+.page.active{display:block}
+
+.card{background:var(--card);padding:18px;border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
+.card-title{font-size:.78rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:14px}
+
+label{display:block;font-size:.75rem;color:var(--dim);margin-bottom:4px;margin-top:10px}
+label:first-of-type{margin-top:0}
+
+input[type=text],input[type=number],input[type=date],select,textarea{
+  width:100%;padding:8px 10px;background:var(--input);border:1px solid var(--border2);
+  color:var(--text);border-radius:6px;font-family:'IBM Plex Sans Thai',sans-serif;
+  font-size:.9rem;outline:none;transition:border .2s;margin-bottom:8px;
+}
+textarea{resize:vertical;min-height:60px}
+input:focus,select:focus,textarea:focus{border-color:var(--primary)}
+select option{background:#1a1a1a}
+input[type="date"]{background:var(--input);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:.88rem}
+::-webkit-calendar-picker-indicator{filter:invert(1);cursor:pointer;opacity:.6}
+
+button{padding:9px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;transition:all .2s;font-family:'IBM Plex Sans Thai',sans-serif}
+button:active{transform:scale(.98)}
+.btn-primary{background:var(--primary);color:#000;width:100%}
+.btn-save{background:var(--secondary);color:#fff;width:100%;margin-top:12px}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-edit{background:rgba(41,182,246,.15);color:var(--info);border:1px solid rgba(41,182,246,.3)}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:4px 10px;font-size:.75rem;width:auto}
+
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border2);color:var(--dim);font-size:.72rem;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+td{padding:8px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#1a1a1a}
+
+.badge{padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:600;font-family:'JetBrains Mono',monospace}
+.badge-green{background:rgba(0,230,118,.15);color:var(--primary);border:1px solid rgba(0,230,118,.3)}
+.badge-red{background:rgba(255,68,68,.15);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+.badge-orange{background:rgba(255,109,0,.15);color:var(--secondary);border:1px solid rgba(255,109,0,.3)}
+.badge-blue{background:rgba(41,182,246,.15);color:var(--info);border:1px solid rgba(41,182,246,.3)}
+
+.bill-layout{display:grid;grid-template-columns:1fr 2fr;gap:16px}
+
+.sd-wrap{position:relative;margin-bottom:10px}
+.sd-input{width:100%;padding:8px 32px 8px 10px;background:var(--input);border:1px solid var(--border2);color:var(--text);border-radius:6px;font-family:'IBM Plex Sans Thai',sans-serif;font-size:.9rem;outline:none;cursor:pointer;transition:border .2s}
+.sd-input:focus,.sd-input.open{border-color:var(--primary)}
+.sd-arrow{position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--dim);font-size:.7rem;transition:transform .2s}
+.sd-arrow.open{transform:translateY(-50%) rotate(180deg)}
+.sd-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#1e1e1e;border:1px solid var(--primary);border-radius:8px;z-index:999;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none}
+.sd-dropdown.open{display:block}
+.sd-search{padding:8px 10px;border-bottom:1px solid var(--border2)}
+.sd-search input{width:100%;background:var(--bg);border:1px solid var(--border2);color:var(--text);padding:6px 10px;border-radius:5px;font-size:.85rem;outline:none;margin:0}
+.sd-search input:focus{border-color:var(--primary)}
+.sd-list{max-height:180px;overflow-y:auto}
+.sd-list::-webkit-scrollbar{width:4px}
+.sd-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.sd-item{padding:9px 14px;cursor:pointer;font-size:.88rem;transition:background .15s}
+.sd-item:hover{background:#2a2a2a}
+.sd-item.selected{color:var(--primary);font-weight:600}
+.sd-empty{padding:10px 14px;color:var(--dim);font-size:.82rem}
+
+.stock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-lbl{font-size:.7rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.stat-num{font-size:1.4rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--primary)}
+.stock-bar{height:6px;background:var(--border);border-radius:3px;margin-top:6px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+.stock-filter-btn{padding:7px 14px;border:1px solid var(--border2);background:var(--card);color:var(--dim);border-radius:8px;cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:.75rem;transition:all .2s;white-space:nowrap;width:auto}
+.stock-filter-btn.active{border-color:var(--primary);color:var(--primary);background:rgba(0,230,118,.08)}
+
+.manage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.manage-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px}
+.manage-card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.manage-card-name{font-weight:600;font-size:.9rem}
+.manage-card-sub{font-size:.75rem;color:var(--dim);margin-top:3px}
+.manage-card-actions{display:flex;gap:6px;flex-shrink:0}
+
+.bills-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.bill-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:12px}
+.bill-card-head{padding:12px 16px;background:#1a1a1a;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none}
+.bill-card-head:hover{background:#222}
+.bill-card-id{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--dim)}
+.bill-card-supplier{font-weight:600;font-size:.9rem;margin-top:2px}
+.bill-card-body{padding:12px 16px;display:none}
+.bill-card-body.open{display:block}
+.bill-card-foot{padding:10px 16px;background:#111;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1a1a;border:1px solid var(--border2);border-radius:14px;padding:28px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal h3{margin-bottom:14px;font-size:1.05rem}
+.modal-btns{display:flex;gap:10px;margin-top:18px}
+.modal-btns button{flex:1}
+
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--primary);color:var(--primary);padding:10px 22px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem;z-index:9999;display:none}
+.empty{text-align:center;padding:40px;color:var(--dim);font-size:.85rem}
+.loading-spin{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== AUTH SCREEN ===== */
+#authScreen{display:none;position:fixed;inset:0;background:var(--bg);z-index:9000;align-items:center;justify-content:center}
+#authScreen.visible{display:flex}
+.auth-box{background:var(--card);border:1px solid var(--border2);border-radius:16px;padding:40px 36px;width:90%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.auth-logo{font-family:'JetBrains Mono',monospace;font-size:1.1rem;color:var(--primary);letter-spacing:3px;margin-bottom:6px}
+.auth-sub{font-size:.78rem;color:var(--dim);margin-bottom:28px}
+.auth-box label{font-size:.72rem;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;margin-top:14px;margin-bottom:4px}
+.auth-box label:first-of-type{margin-top:0}
+.auth-box input{margin-bottom:0}
+.auth-err{color:var(--danger);font-size:.78rem;margin-top:8px;min-height:18px;font-family:'JetBrains Mono',monospace}
+.btn-login{background:var(--primary);color:#000;width:100%;margin-top:20px;padding:11px;font-size:.92rem;letter-spacing:.5px}
+.btn-login:disabled{opacity:.5;cursor:not-allowed}
+
+/* user chip in nav */
+.nav-user{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:7px;background:#1a1a1a;border:1px solid var(--border2);border-radius:20px;padding:5px 12px 5px 8px;font-size:.78rem;color:var(--dim)}
+.user-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0}
+.btn-logout{padding:6px 14px;background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.3);color:var(--danger);border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .2s;white-space:nowrap;width:auto}
+.btn-logout:hover{background:rgba(255,68,68,.25)}
+
+/* full-page loading overlay */
+/* LOG PAGE */
+.log-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+.log-row{display:grid;grid-template-columns:180px 100px 80px 1fr 120px;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-size:.83rem;transition:background .15s}
+.log-row:hover{background:#1a1a1a}
+.log-row:last-child{border-bottom:none}
+.log-row-head{display:grid;grid-template-columns:180px 100px 80px 1fr 120px;gap:12px;padding:8px 14px;border-bottom:1px solid var(--border2)}
+.log-action-badge{padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.log-create-bill{background:rgba(41,182,246,.12);color:var(--info);border:1px solid rgba(41,182,246,.3)}
+.log-view-bill{background:rgba(0,230,118,.1);color:var(--primary);border:1px solid rgba(0,230,118,.25)}
+.log-sale{background:rgba(255,109,0,.12);color:var(--secondary);border:1px solid rgba(255,109,0,.3)}
+.log-paid{background:rgba(255,179,0,.12);color:var(--warning);border:1px solid rgba(255,179,0,.3)}
+.log-cancel{background:rgba(255,68,68,.12);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+.badge-cancelled{background:rgba(255,68,68,.12);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:7px;background:#1a1a1a;border:1px solid var(--border2);border-radius:20px;padding:5px 14px 5px 10px;font-size:.78rem;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.user-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.user-rank-chip{padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+.rank-admin{background:rgba(255,109,0,.15);color:var(--secondary);border:1px solid rgba(255,109,0,.3)}
+.rank-staff{background:rgba(0,230,118,.15);color:var(--primary);border:1px solid rgba(0,230,118,.3)}
+.btn-logout{padding:6px 14px;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.25);color:var(--danger);border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .2s;white-space:nowrap;width:auto;font-family:'IBM Plex Sans Thai',sans-serif}
+.btn-logout:hover{background:rgba(255,68,68,.22);border-color:var(--danger)}
+</style>
+</head>
+<body>
+
+<nav class="topnav" id="mainNav">
+  <div class="nav-brand">&#x2B21; ADMIN PANEL</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('bill',this)">&#x1F4CB; สร้างบิล</button>
+    <button class="nav-tab" onclick="showPage('billhistory',this)">&#x1F4DC; บิลขาเข้า</button>
+    <button class="nav-tab" onclick="showPage('products',this)">&#x1F3F7; สินค้า</button>
+    <button class="nav-tab" onclick="showPage('suppliers',this)">&#x1F3E2; Supplier</button>
+    <button class="nav-tab" onclick="showPage('types',this)">&#x1F4C2; Type</button>
+    <button class="nav-tab" onclick="showPage('stock',this)">&#x1F4E6; สต็อก</button>
+    <button class="nav-tab" onclick="showPage('log',this)">&#x1F4CB; Log</button>
+  </div>
+  <div class="nav-right">
+    <div class="user-chip">
+      <span class="user-dot"></span>
+      <span id="navUsername">—</span>
+      <span class="user-rank-chip rank-admin" id="navRankBadge">—</span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">&#x1F6AA; ออกจากระบบ</button>
+  </div>
+</nav>
+
+<!-- BILL -->
+<div class="page active" id="page-bill">
+  <div class="bill-layout">
+    <div>
+      <div class="card">
+        <div class="card-title">เพิ่ม Supplier</div>
+        <input type="text" id="supplierName" placeholder="ชื่อบริษัท">
+        <input type="text" maxlength="10" minlength="10" id="supplierPhone" placeholder="เบอร์โทร">
+        <input type="text" id="supplierAddress" placeholder="ที่อยู่">
+        <input type="text" maxlength="13" minlength="13" id="supplierId" placeholder="รหัสบริษัท (companyid)">
+        <button class="btn-primary" onclick="addsupplier()">+ เพิ่ม Supplier</button>
+      </div>
+      <div class="card">
+        <div class="card-title">เพิ่ม Type</div>
+        <input type="text" id="typeName" placeholder="ประเภทสินค้า">
+        <button class="btn-primary" onclick="addType()">+ เพิ่ม Type</button>
+      </div>
+      <div class="card">
+        <div class="card-title">เพิ่ม Location</div>
+        <input type="text" id="locationName" placeholder="ชื่อสถานที่">
+        <button class="btn-primary" onclick="addLocation()">+ เพิ่ม Location</button>
+      </div>
+      <div class="card">
+        <div class="card-title">เพิ่มชื่อสินค้า</div>
+        <label>เลือก Type</label>
+        <div id="sd-nameType" class="sd-wrap"></div>
+        <input type="text" id="productName" placeholder="ชื่อสินค้า">
+        <input type="number" id="productPrice" placeholder="ราคาขาย">
+        <button class="btn-primary" onclick="addproduct()">+ เพิ่มสินค้า</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">สร้างบิลรับสินค้า</div>
+      <label>Supplier</label>
+      <div id="sd-supplier" class="sd-wrap"></div>
+      <label>Type</label>
+      <div id="sd-type" class="sd-wrap"></div>
+      <label>ชื่อสินค้า</label>
+      <div id="sd-name" class="sd-wrap"></div>
+      <label>Location</label>
+      <div id="sd-location" class="sd-wrap"></div>
+      <label>จำนวน</label>
+      <input type="number" id="quantity" min="1">
+      <label>ราคาเข้า (รวม)</label>
+      <input type="number" id="cost" min="0">
+      <button class="btn-primary" onclick="addToCart()">+ เพิ่มลงบิล</button>
+      <hr style="border-color:var(--border);margin:14px 0">
+      <div class="card-title">รายการในบิล</div>
+      <table>
+        <thead><tr><th>สินค้า</th><th>ประเภท</th><th>สถานที่</th><th>จำนวน</th><th>ราคาเข้า</th><th></th></tr></thead>
+        <tbody id="billBody"><tr><td colspan="6" style="color:var(--dim);text-align:center;font-size:.8rem;padding:20px">ยังไม่มีรายการ</td></tr></tbody>
+      </table>
+      <div style="margin-top:14px">
+        <label>Due Date</label>
+        <input type="date" id="duedate">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <span style="color:var(--dim);font-size:.8rem">ราคารวม</span>
+          <span id="totalPrice" style="font-family:'JetBrains Mono',monospace;font-size:1.2rem;color:var(--secondary);font-weight:600">0 บาท</span>
+        </div>
+        <button class="btn-save" onclick="saveBill()">&#x1F4BE; บันทึกบิล</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BILL HISTORY -->
+<div class="page" id="page-billhistory">
+  <div class="bills-stats">
+    <div class="stat-box"><div class="stat-lbl">บิลทั้งหมด</div><div class="stat-num" id="billTotal">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">มูลค่ารวม</div><div class="stat-num" id="billValue" style="font-size:1rem;color:var(--secondary)">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">เดือนนี้</div><div class="stat-num" id="billMonth">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">บิลขาเข้าทั้งหมด</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" id="billSearch" placeholder="🔍 ค้นหา supplier, บิล..." oninput="filterBills()" style="flex:1;min-width:200px;margin-bottom:0">
+      <input type="date" id="billDateFrom" onchange="filterBills()" style="width:auto;min-width:140px;margin-bottom:0">
+      <input type="date" id="billDateTo" onchange="filterBills()" style="width:auto;min-width:140px;margin-bottom:0">
+    </div>
+    <div id="billsList"><div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div></div>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="page" id="page-products">
+  <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center">
+    <input type="text" id="productSearch" placeholder="🔍 ค้นหาสินค้า..." oninput="filterproductList()" style="max-width:300px;margin-bottom:0">
+    <span style="color:var(--dim);font-size:.8rem" id="productCount"></span>
+  </div>
+  <div class="manage-grid" id="productGrid"><div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div></div>
+</div>
+
+<!-- SUPPLIERS -->
+<div class="page" id="page-suppliers">
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <input type="text" id="supplierSearch" placeholder="🔍 ค้นหา supplier..." oninput="filtersupplierList()" style="max-width:300px;margin-bottom:0">
+  </div>
+  <div class="manage-grid" id="supplierGrid"><div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div></div>
+</div>
+
+<!-- TYPES -->
+<div class="page" id="page-types">
+  <div style="display:flex;gap:10px;margin-bottom:16px">
+    <input type="text" id="typeSearch" placeholder="🔍 ค้นหา Type..." oninput="filterTypeList()" style="max-width:300px;margin-bottom:0">
+  </div>
+  <div class="manage-grid" id="typeGrid"><div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div></div>
+</div>
+
+<!-- STOCK -->
+<div class="page" id="page-stock">
+  <div class="stock-stats">
+    <div class="stat-box"><div class="stat-lbl">สินค้าทั้งหมด</div><div class="stat-num" id="stockTotal">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">ใกล้หมด (&lt;15)</div><div class="stat-num" id="stockLow" style="color:var(--warning)">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">หมดสต็อก</div><div class="stat-num" id="stockOut" style="color:var(--danger)">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">สต็อกสินค้า</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <input type="text" id="stockSearch" placeholder="🔍 ค้นหาสินค้า..." oninput="filterStock()" style="flex:1;min-width:200px;margin-bottom:0">
+      <button class="stock-filter-btn active" onclick="setStockFilter('all',this)">ทั้งหมด</button>
+      <button class="stock-filter-btn" onclick="setStockFilter('low',this)">⚠️ ใกล้หมด</button>
+      <button class="stock-filter-btn" onclick="setStockFilter('out',this)">🔴 หมด</button>
+    </div>
+    <table>
+      <thead><tr><th>สินค้า</th><th>ประเภท</th><th>สถานที่</th><th>ราคาขาย</th><th>สต็อก</th><th>สถานะ</th></tr></thead>
+      <tbody id="stockTable"><tr><td colspan="6"><div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div></td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- LOG -->
+<div class="page" id="page-log">
+  <div class="log-stats">
+    <div class="stat-box"><div class="stat-lbl">Log ทั้งหมด</div><div class="stat-num" id="logCountAll">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">วันนี้</div><div class="stat-num" id="logCountToday" style="color:var(--info)">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">สร้างบิล</div><div class="stat-num" id="logCountBill" style="color:var(--secondary)">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">ขายสินค้า</div><div class="stat-num" id="logCountSale" style="color:var(--primary)">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">บันทึก Activity Log</div>
+    <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+      <input type="text" id="logSearch" placeholder="🔍 ค้นหาผู้ใช้, บิล, action..." oninput="filterLog()" style="flex:1;min-width:200px;margin-bottom:0">
+      <select id="logActionFilter" onchange="filterLog()" style="width:auto;min-width:140px;margin-bottom:0">
+        <option value="">ทุก Action</option>
+        <option value="create_bill">สร้างบิลขาเข้า</option>
+        <option value="view_bill">เปิดดูบิลขาเข้า</option>
+        <option value="sale">ขายสินค้า</option>
+        <option value="mark_paid">รับชำระบิลขาย</option>
+        <option value="cancel_bill">ยกเลิกบิลขาเข้า</option>
+        <option value="cancel_sale">ยกเลิกบิลขาย</option>
+        <option value="return">คืนสินค้า</option>
+      </select>
+      <input type="date" id="logDateFrom" onchange="filterLog()" style="width:auto;min-width:140px;margin-bottom:0">
+      <input type="date" id="logDateTo"   onchange="filterLog()" style="width:auto;min-width:140px;margin-bottom:0">
+    </div>
+    <div class="log-row-head">
+      <span style="font-size:.7rem;color:var(--dim);font-family:'JetBrains Mono',monospace;text-transform:uppercase">เวลา</span>
+      <span style="font-size:.7rem;color:var(--dim);font-family:'JetBrains Mono',monospace;text-transform:uppercase">ผู้ใช้</span>
+      <span style="font-size:.7rem;color:var(--dim);font-family:'JetBrains Mono',monospace;text-transform:uppercase">Rank</span>
+      <span style="font-size:.7rem;color:var(--dim);font-family:'JetBrains Mono',monospace;text-transform:uppercase">รายละเอียด</span>
+      <span style="font-size:.7rem;color:var(--dim);font-family:'JetBrains Mono',monospace;text-transform:uppercase">Action</span>
+    </div>
+    <div id="logList"><div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div></div>
+  </div>
+</div>
+
+<!-- Modal แก้ไขสินค้า -->
+<div class="modal-overlay" id="editproductModal">
+  <div class="modal">
+    <h3>✏️ แก้ไขสินค้า</h3>
+    <input type="hidden" id="editproductId">
+    <label>ชื่อสินค้า</label><input type="text" id="editproductName">
+    <label>ราคาขาย</label><input type="number" id="editproductPrice">
+    <label>Type</label><div id="sd-editType" class="sd-wrap"></div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('editproductModal')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEditproduct()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal แก้ไข supplier -->
+<div class="modal-overlay" id="editsupplierModal">
+  <div class="modal">
+    <h3>✏️ แก้ไข Supplier</h3>
+    <input type="hidden" id="editsupplierId">
+    <label>ชื่อบริษัท</label><input type="text" id="editsupplierName">
+    <label>เบอร์โทร</label><input type="text" id="editsupplierPhone" maxlength="20">
+    <label>ที่อยู่</label><textarea id="editsupplierAddress"></textarea>
+    <label>รหัสบริษัท</label><input type="text" id="editsupplierIdField" maxlength="20">
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('editsupplierModal')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEditsupplier()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal แก้ไข Type -->
+<div class="modal-overlay" id="editTypeModal">
+  <div class="modal">
+    <h3>✏️ แก้ไข Type</h3>
+    <input type="hidden" id="editTypeId">
+    <label>ชื่อประเภท</label><input type="text" id="editTypeName">
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('editTypeModal')">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveEditType()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ยืนยันลบ -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>🗑 ยืนยันลบ</h3>
+    <p id="deleteDesc" style="color:var(--dim);font-size:.88rem;margin-bottom:8px"></p>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('deleteModal')">ยกเลิก</button>
+      <button class="btn-danger" onclick="confirmDelete()">ยืนยันลบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ยกเลิกบิลขาเข้า -->
+<div class="modal-overlay" id="cancelBillModal">
+  <div class="modal">
+    <h3>&#x274C; ยกเลิกบิลขาเข้า</h3>
+    <p id="cancelBillDesc" style="color:var(--dim);font-size:.88rem;margin-bottom:12px"></p>
+    <div style="background:rgba(255,68,68,.07);border:1px solid rgba(255,68,68,.2);border-radius:8px;padding:12px;margin-bottom:4px">
+      <div style="font-size:.8rem;color:var(--danger);font-weight:600;margin-bottom:4px">&#x26A0;&#xFE0F; ผลของการยกเลิก</div>
+      <div style="font-size:.78rem;color:var(--dim);line-height:1.7">
+        &bull; สถานะบิลจะเปลี่ยนเป็น <strong style="color:var(--danger)">ยกเลิกแล้ว</strong><br>
+        &bull; สินค้าที่รับเข้าจาก inventory จะถูก<strong>หักคืน</strong>ทั้งหมด<br>
+        &bull; การกระทำนี้<strong>ไม่สามารถยกเลิกได้</strong>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('cancelBillModal')">ปิด</button>
+      <button class="btn-danger" onclick="confirmCancelBill()">&#x274C; ยืนยันยกเลิกบิล</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ============================================================
+//  Supabase Config — เปลี่ยนค่าตรงนี้ถ้าต้องการ
+// ============================================================
+const SUPABASE_URL = 'https://xxhfqxrehsummjmpkoxu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4aGZxeHJlaHN1bW1qbXBrb3h1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDI5NjYsImV4cCI6MjA4ODE3ODk2Nn0.ioFvUUwPddFPUQeDT2CWydTLmI2s-Pd_N_viEFSHSvg'
+// ============================================================
+
+const { createClient } = supabase
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+let allsuppliers=[], allTypes=[], allLocations=[], allproducts=[], allInventory=[]
+let allBillsDisplay=[], allStockData=[]
+let billItems=[], currentStockFilter='all', pendingDelete=null
+
+// ===== LOGGING =====
+async function writeLog(action, billType, billId, detail) {
+  const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}')
+  try {
+    await db.from('log').insert({
+      username:   user.username || 'unknown',
+      rank:       user.rank     || 'unknown',
+      action,
+      bill_type:  billType || null,
+      bill_id:    billId   || null,
+      detail:     detail   || null,
+      created_at: new Date().toISOString()
+    })
+  } catch(e) { console.warn('writeLog failed:', e) }
+}
+
+// ===== NAV =====
+window.showPage = function(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'))
+  document.getElementById('page-' + name).classList.add('active')
+  el.classList.add('active')
+  if (name === 'billhistory') renderBillHistory()
+  if (name === 'products')    renderproductList()
+  if (name === 'suppliers')   rendersupplierList()
+  if (name === 'types')       renderTypeList()
+  if (name === 'stock')       renderStock()
+  if (name === 'log')         renderLog()
+}
+
+// ===== SEARCHABLE DROPDOWN =====
+const dropdowns = {}
+function createSD(containerId, placeholder) {
+  const wrap = document.getElementById(containerId)
+  wrap.innerHTML = `
+    <input type="text" class="sd-input" placeholder="${placeholder}" readonly>
+    <span class="sd-arrow">&#x25BC;</span>
+    <div class="sd-dropdown">
+      <div class="sd-search"><input type="text" placeholder="ค้นหา..."></div>
+      <div class="sd-list"></div>
+    </div>`
+  const display  = wrap.querySelector('.sd-input')
+  const arrow    = wrap.querySelector('.sd-arrow')
+  const dropdown = wrap.querySelector('.sd-dropdown')
+  const search   = wrap.querySelector('.sd-search input')
+  const list     = wrap.querySelector('.sd-list')
+  let items = [], selected = null, onChange = null
+
+  function open()  { dropdown.classList.add('open'); arrow.classList.add('open'); display.classList.add('open'); search.value = ''; renderList(''); search.focus() }
+  function close() { dropdown.classList.remove('open'); arrow.classList.remove('open'); display.classList.remove('open') }
+
+  display.addEventListener('click', e => { dropdown.classList.contains('open') ? close() : open(); e.stopPropagation() })
+  dropdown.addEventListener('click', e => e.stopPropagation())
+  document.addEventListener('click', close)
+  search.addEventListener('input', () => renderList(search.value))
+
+  function renderList(q) {
+    const filtered = items.filter(it => it.label.toLowerCase().includes(q.toLowerCase()))
+    if (!filtered.length) { list.innerHTML = '<div class="sd-empty">ไม่พบข้อมูล</div>'; return }
+    list.innerHTML = filtered.map(it =>
+      `<div class="sd-item${selected && selected.value === it.value ? ' selected' : ''}" data-value="${it.value}" data-label="${it.label}">${it.label}</div>`
+    ).join('')
+    list.querySelectorAll('.sd-item').forEach(el => {
+      el.addEventListener('click', () => {
+        selected = { value: el.dataset.value, label: el.dataset.label }
+        display.value = el.dataset.label; close()
+        if (onChange) onChange(selected)
+      })
+    })
+  }
+
+  const api = {
+    setItems(arr)      { items = arr; selected = null; display.value = '' },
+    getValue()         { return selected },
+    setOnChange(fn)    { onChange = fn },
+    clear()            { selected = null; display.value = '' },
+    setValue(val, lbl) { selected = { value: val, label: lbl }; display.value = lbl }
+  }
+  dropdowns[containerId] = api
+  return api
+}
+
+createSD('sd-supplier', 'เลือก Supplier')
+createSD('sd-type',     'เลือก Type')
+createSD('sd-name',     'เลือกชื่อสินค้า')
+createSD('sd-location', 'เลือก Location')
+createSD('sd-nameType', 'เลือก Type')
+createSD('sd-editType', 'เลือก Type')
+
+dropdowns['sd-type'].setOnChange(sel => {
+  const typeId = Number(sel.value)
+  dropdowns['sd-name'].setItems(allproducts.filter(p => p.typeid === typeId).map(p => ({ value: String(p.id), label: p.name })))
+  dropdowns['sd-name'].clear()
+})
+
+// ===== LOAD DATA =====
+async function loadsuppliers() {
+  const { data, error } = await db.from('supplier').select('*').order('suppliername')
+  if (error) { console.error('loadsuppliers:', error.message); return }
+  allsuppliers = data || []
+  dropdowns['sd-supplier'].setItems(allsuppliers.map(s => ({ value: String(s.id), label: s.suppliername })))
+}
+
+async function loadTypes() {
+  const { data, error } = await db.from('type').select('*').order('typename')
+  if (error) { console.error('loadTypes:', error.message); return }
+  allTypes = data || []
+  const items = allTypes.map(t => ({ value: String(t.id), label: t.typename }))
+  dropdowns['sd-type'].setItems(items)
+  dropdowns['sd-nameType'].setItems(items)
+  dropdowns['sd-editType'].setItems(items)
+}
+
+async function loadLocations() {
+  const { data, error } = await db.from('location').select('*').order('locationname')
+  if (error) { console.error('loadLocations:', error.message); return }
+  allLocations = data || []
+  dropdowns['sd-location'].setItems(allLocations.map(l => ({ value: String(l.id), label: l.locationname })))
+}
+
+async function loadproducts() {
+  const { data, error } = await db.from('product').select('id, name, price, typeid, type(typename)').order('name')
+  if (error) { console.error('loadproducts:', error.message); return }
+  allproducts = (data || []).map(p => ({ ...p, typeName: p.type?.typename || '—' }))
+}
+
+async function loadInventory() {
+  const { data, error } = await db.from('inventory').select('id, quantity, nameid, locationid, product(name), location(locationname)')
+  if (error) { console.error('loadInventory:', error.message); return }
+  allInventory = (data || []).map(i => ({
+    ...i,
+    productName:  i.product?.name || '—',
+    locationName: i.location?.locationname || '—'
+  }))
+}
+
+// ===== ADD MASTER DATA =====
+window.addsupplier = async () => {
+  const name      = document.getElementById('supplierName').value.trim()
+  const phone     = document.getElementById('supplierPhone').value.trim()
+  const address   = document.getElementById('supplierAddress').value.trim()
+  const companyid = document.getElementById('supplierId').value.trim()
+  if (!name) return showToast('กรุณากรอกชื่อบริษัท')
+  const { error } = await db.from('supplier').insert({ suppliername: name, phone, address, companyid })
+  if (error) return showToast('Error: ' + error.message)
+  ;['supplierName','supplierPhone','supplierAddress','supplierId'].forEach(id => document.getElementById(id).value = '')
+  await loadsuppliers()
+  showToast('เพิ่ม Supplier เรียบร้อย')
+}
+
+window.addType = async () => {
+  const name = document.getElementById('typeName').value.trim()
+  if (!name) return showToast('กรุณากรอกชื่อประเภท')
+  const { error } = await db.from('type').insert({ typename: name })
+  if (error) return showToast('Error: ' + error.message)
+  document.getElementById('typeName').value = ''
+  await loadTypes()
+  showToast('เพิ่ม Type เรียบร้อย')
+}
+
+window.addLocation = async () => {
+  const name = document.getElementById('locationName').value.trim()
+  if (!name) return showToast('กรุณากรอกชื่อสถานที่')
+  const { error } = await db.from('location').insert({ locationname: name })
+  if (error) return showToast('Error: ' + error.message)
+  document.getElementById('locationName').value = ''
+  await loadLocations()
+  showToast('เพิ่ม Location เรียบร้อย')
+}
+
+window.addproduct = async () => {
+  const sel   = dropdowns['sd-nameType'].getValue()
+  if (!sel) return showToast('กรุณาเลือก Type')
+  const name  = document.getElementById('productName').value.trim()
+  const price = Number(document.getElementById('productPrice').value) || 0
+  if (!name) return showToast('กรุณากรอกชื่อสินค้า')
+  const { error } = await db.from('product').insert({ name, price, typeid: Number(sel.value) })
+  if (error) return showToast('Error: ' + error.message)
+  document.getElementById('productName').value  = ''
+  document.getElementById('productPrice').value = ''
+  await loadproducts()
+  showToast('เพิ่มสินค้าเรียบร้อย')
+}
+
+// ===== BILL CART =====
+window.addToCart = function() {
+  const n = dropdowns['sd-name'].getValue()
+  const t = dropdowns['sd-type'].getValue()
+  const l = dropdowns['sd-location'].getValue()
+  const q = document.getElementById('quantity').value
+  const c = document.getElementById('cost').value
+  if (!n || !t || !l || !q) return showToast('กรุณากรอกข้อมูลให้ครบ')
+  const product  = allproducts.find(p => p.id === Number(n.value))
+  const location = allLocations.find(x => x.id === Number(l.value))
+  billItems.push({
+    productId:   Number(n.value), productName: product?.name || n.label,
+    typeId:      Number(t.value), typeName: t.label,
+    locationId:  Number(l.value), locationName: location?.locationname || l.label,
+    quantity:    Number(q), cost: Number(c)
+  })
+  document.getElementById('quantity').value = ''
+  document.getElementById('cost').value     = ''
+  dropdowns['sd-type'].clear(); dropdowns['sd-name'].clear(); dropdowns['sd-location'].clear()
+  renderBillTable()
+}
+
+function renderBillTable() {
+  const tbody   = document.getElementById('billBody')
+  const totalEl = document.getElementById('totalPrice')
+  if (!billItems.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="color:var(--dim);text-align:center;font-size:.8rem;padding:20px">ยังไม่มีรายการ</td></tr>'
+    totalEl.textContent = '0 บาท'; return
+  }
+  const total = billItems.reduce((s, i) => s + i.cost, 0)
+  totalEl.textContent = total.toLocaleString() + ' บาท'
+  tbody.innerHTML = billItems.map((item, i) => `
+    <tr>
+      <td>${item.productName}</td><td>${item.typeName}</td>
+      <td>${item.locationName}</td><td>${item.quantity}</td>
+      <td style="font-family:'JetBrains Mono',monospace">${item.cost.toLocaleString()}</td>
+      <td><button class="btn-danger btn-sm" onclick="removeItem(${i})">ลบ</button></td>
+    </tr>`).join('')
+}
+
+window.removeItem = function(i) { billItems.splice(i, 1); renderBillTable() }
+
+window.saveBill = async () => {
+  if (!billItems.length) return showToast('ไม่มีสินค้าในบิล')
+  const sup = dropdowns['sd-supplier'].getValue()
+  if (!sup) return showToast('กรุณาเลือก Supplier')
+  const duedate = document.getElementById('duedate').value
+  if (!duedate) return showToast('กรุณาใส่วันที่')
+  const totalCost = billItems.reduce((s, i) => s + i.cost, 0)
+
+  const { data: bill, error: e1 } = await db.from('billvoice').insert({
+    supplierid: Number(sup.value),
+    duedate:    duedate,
+    totalcost:  totalCost,
+    date:       new Date().toISOString()
+  }).select().single()
+  if (e1) return showToast('Error สร้างบิล: ' + e1.message)
+
+  const rows = billItems.map(item => ({
+    billid:     bill.id,
+    productid:  item.productId,
+    locationid: item.locationId,
+    quantity:   item.quantity,
+    cost:       item.cost
+  }))
+  const { error: e2 } = await db.from('billvoice_item').insert(rows)
+  if (e2) return showToast('Error บันทึกรายการ: ' + e2.message)
+
+  for (const item of billItems) {
+    const { data: existing } = await db.from('inventory')
+      .select('id, quantity')
+      .eq('nameid', item.productId)
+      .eq('locationid', item.locationId)
+      .maybeSingle()
+    if (existing) {
+      await db.from('inventory').update({ quantity: existing.quantity + item.quantity }).eq('id', existing.id)
+    } else {
+      await db.from('inventory').insert({ nameid: item.productId, locationid: item.locationId, quantity: item.quantity })
+    }
+  }
+
+  showToast('บันทึกบิลสำเร็จ')
+  await writeLog('create_bill', 'billvoice', bill.id,
+    `สร้างบิลขาเข้า #${String(bill.id).padStart(6,'0')} supplier: ${dropdowns['sd-supplier'].getValue()?.label || '—'} มูลค่า ${totalCost.toLocaleString()} ฿`
+  )
+  billItems = []
+  renderBillTable()
+  dropdowns['sd-supplier'].clear()
+  document.getElementById('duedate').value = ''
+}
+
+// ===== BILL HISTORY =====
+window.renderBillHistory = async function() {
+  const { data, error } = await db.from('billvoice')
+    .select('id, date, duedate, totalcost, status, supplier(suppliername)')
+    .order('date', { ascending: false })
+  if (error) { console.error('renderBillHistory:', error.message); return }
+  allBillsDisplay = (data || []).map(b => ({ ...b, supplierName: b.supplier?.suppliername || '—' }))
+
+  const total      = allBillsDisplay.length
+  const totalVal   = allBillsDisplay.reduce((s, b) => s + (b.totalcost || 0), 0)
+  const now        = new Date()
+  const monthCount = allBillsDisplay.filter(b => {
+    const d = new Date(b.date)
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+  }).length
+
+  document.getElementById('billTotal').textContent = total
+  document.getElementById('billValue').textContent = totalVal.toLocaleString() + ' ฿'
+  document.getElementById('billMonth').textContent = monthCount
+  filterBills()
+}
+
+window.filterBills = function() {
+  const q    = (document.getElementById('billSearch')?.value || '').toLowerCase()
+  const from = document.getElementById('billDateFrom')?.value
+  const to   = document.getElementById('billDateTo')?.value
+  let filtered = allBillsDisplay.filter(b => {
+    if (q && !b.supplierName.toLowerCase().includes(q) && !String(b.id).includes(q)) return false
+    if (from && new Date(b.date) < new Date(from)) return false
+    if (to   && new Date(b.date) > new Date(to + 'T23:59:59')) return false
+    return true
+  })
+  renderBillList(filtered)
+}
+
+function renderBillList(bills) {
+  const el = document.getElementById('billsList')
+  if (!bills.length) { el.innerHTML = '<div class="empty">ไม่พบบิล</div>'; return }
+  el.innerHTML = bills.map(b => {
+    const dateStr     = b.date    ? new Date(b.date).toLocaleString('th-TH')       : '—'
+    const dueStr      = b.duedate ? new Date(b.duedate).toLocaleDateString('th-TH') : '—'
+    const isCancelled = b.status === 'cancelled'
+    const statusBadge = isCancelled
+      ? `<span class="badge badge-cancelled" style="margin-right:6px">ยกเลิกแล้ว</span>`
+      : ''
+    const cancelBtn = !isCancelled
+      ? `<button class="btn-danger btn-sm" style="margin-left:8px" onclick='event.stopPropagation();openCancelBillModal(${b.id},${JSON.stringify(b.supplierName)},${b.totalcost||0})'>&#x274C; ยกเลิก</button>`
+      : ''
+    return `<div class="bill-card" style="${isCancelled ? 'opacity:.55' : ''}">
+      <div class="bill-card-head" onclick="toggleBill('bill-${b.id}')">
+        <div>
+          <div class="bill-card-id">#${String(b.id).padStart(6,'0')} &middot; ${dateStr}</div>
+          <div class="bill-card-supplier">${b.supplierName}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          ${statusBadge}
+          <span class="badge badge-blue">ขาเข้า</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--secondary);font-weight:600">${Number(b.totalcost||0).toLocaleString()} ฿</span>
+          ${cancelBtn}
+          <span style="color:var(--dim);font-size:.8rem">&#x25BC;</span>
+        </div>
+      </div>
+      <div class="bill-card-body" id="bill-${b.id}">
+        <div id="bill-items-${b.id}"><div class="loading-spin" style="padding:14px"><div class="spinner"></div>กำลังโหลด...</div></div>
+        <div class="bill-card-foot">
+          <span style="font-size:.78rem;color:var(--dim)">Due: ${dueStr}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:var(--secondary)">${Number(b.totalcost||0).toLocaleString()} ฿</span>
+        </div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+window.toggleBill = async function(elId) {
+  const el = document.getElementById(elId); if (!el) return
+  if (el.classList.contains('open')) { el.classList.remove('open'); return }
+  el.classList.add('open')
+  const billId  = elId.replace('bill-', '')
+  const itemsEl = document.getElementById('bill-items-' + billId)
+  const billData = allBillsDisplay.find(b => String(b.id) === String(billId))
+  await writeLog('view_bill', 'billvoice', Number(billId),
+    `เปิดดูบิลขาเข้า #${String(billId).padStart(6,'0')} supplier: ${billData?.supplierName || '—'}`
+  )
+  if (itemsEl.dataset.loaded) return
+  const { data } = await db.from('billvoice_item')
+    .select('quantity, cost, product(name), location(locationname)')
+    .eq('billid', billId)
+  const rows = (data || []).map(i => `
+    <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--border);font-size:.82rem">
+      <span>${i.product?.name || '—'} <span style="color:var(--dim)">&times; ${i.quantity}</span></span>
+      <span style="color:var(--dim);font-size:.75rem">${i.location?.locationname || '—'}</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${Number(i.cost||0).toLocaleString()} ฿</span>
+    </div>`).join('')
+  itemsEl.innerHTML   = rows || '<div class="empty" style="padding:14px">ไม่พบรายการ</div>'
+  itemsEl.dataset.loaded = '1'
+}
+
+// ===== PRODUCTS PAGE =====
+window.renderproductList = async function() {
+  if (!allproducts.length) await loadproducts()
+  filterproductList()
+  document.getElementById('productCount').textContent = allproducts.length + ' รายการ'
+}
+
+window.filterproductList = function() {
+  const q = document.getElementById('productSearch').value.toLowerCase()
+  const filtered = allproducts.filter(p => p.name?.toLowerCase().includes(q) || p.typeName?.toLowerCase().includes(q))
+  const grid = document.getElementById('productGrid')
+  if (!filtered.length) { grid.innerHTML = '<div class="empty">ไม่พบสินค้า</div>'; return }
+  grid.innerHTML = filtered.map(p => `
+    <div class="manage-card">
+      <div class="manage-card-head">
+        <div>
+          <div class="manage-card-name">${p.name}</div>
+          <div class="manage-card-sub"><span class="badge badge-green" style="font-size:.65rem">${p.typeName}</span></div>
+        </div>
+        <div class="manage-card-actions">
+          <button class="btn-edit btn-sm" onclick="openEditproduct(${p.id})">✏️</button>
+          <button class="btn-danger btn-sm" onclick='openDelete("product",${p.id},${JSON.stringify(p.name)})'>🗑</button>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--secondary);margin-top:6px">${Number(p.price||0).toLocaleString()} ฿</div>
+    </div>`).join('')
+}
+
+window.openEditproduct = function(id) {
+  const p = allproducts.find(x => x.id === id); if (!p) return
+  document.getElementById('editproductId').value    = id
+  document.getElementById('editproductName').value  = p.name  || ''
+  document.getElementById('editproductPrice').value = p.price || ''
+  if (p.typeid) dropdowns['sd-editType'].setValue(String(p.typeid), p.typeName)
+  else dropdowns['sd-editType'].clear()
+  document.getElementById('editproductModal').classList.add('open')
+}
+
+window.saveEditproduct = async function() {
+  const id      = Number(document.getElementById('editproductId').value)
+  const name    = document.getElementById('editproductName').value.trim()
+  const price   = Number(document.getElementById('editproductPrice').value)
+  const typesel = dropdowns['sd-editType'].getValue()
+  if (!name || !price) return showToast('กรุณากรอกข้อมูลให้ครบ')
+  const upd = { name, price }
+  if (typesel) upd.typeid = Number(typesel.value)
+  await db.from('product').update(upd).eq('id', id)
+  closeModal('editproductModal')
+  showToast('แก้ไขสินค้าเรียบร้อย')
+  await loadproducts(); renderproductList()
+}
+
+// ===== SUPPLIERS PAGE =====
+window.rendersupplierList = async function() {
+  if (!allsuppliers.length) await loadsuppliers()
+  filtersupplierList()
+}
+
+window.filtersupplierList = function() {
+  const q = document.getElementById('supplierSearch').value.toLowerCase()
+  const filtered = allsuppliers.filter(s => s.suppliername?.toLowerCase().includes(q) || s.phone?.includes(q))
+  const grid = document.getElementById('supplierGrid')
+  if (!filtered.length) { grid.innerHTML = '<div class="empty">ไม่พบ Supplier</div>'; return }
+  grid.innerHTML = filtered.map(s => `
+    <div class="manage-card">
+      <div class="manage-card-head">
+        <div>
+          <div class="manage-card-name">${s.suppliername || '—'}</div>
+          <div class="manage-card-sub">📞 ${s.phone || '—'}</div>
+        </div>
+        <div class="manage-card-actions">
+          <button class="btn-edit btn-sm" onclick="openEditsupplier(${s.id})">✏️</button>
+          <button class="btn-danger btn-sm" onclick='openDelete("supplier",${s.id},${JSON.stringify(s.suppliername)})'>🗑</button>
+        </div>
+      </div>
+      <div style="font-size:.78rem;color:var(--dim);margin-top:6px">${s.address || ''}</div>
+      ${s.companyid ? `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--dim);margin-top:4px">ID: ${s.companyid}</div>` : ''}
+    </div>`).join('')
+}
+
+window.openEditsupplier = function(id) {
+  const s = allsuppliers.find(x => x.id === id); if (!s) return
+  document.getElementById('editsupplierId').value      = id
+  document.getElementById('editsupplierName').value    = s.suppliername || ''
+  document.getElementById('editsupplierPhone').value   = s.phone        || ''
+  document.getElementById('editsupplierAddress').value = s.address      || ''
+  document.getElementById('editsupplierIdField').value = s.companyid    || ''
+  document.getElementById('editsupplierModal').classList.add('open')
+}
+
+window.saveEditsupplier = async function() {
+  const id           = Number(document.getElementById('editsupplierId').value)
+  const suppliername = document.getElementById('editsupplierName').value.trim()
+  if (!suppliername) return showToast('กรุณากรอกชื่อบริษัท')
+  await db.from('supplier').update({
+    suppliername,
+    phone:     document.getElementById('editsupplierPhone').value,
+    address:   document.getElementById('editsupplierAddress').value,
+    companyid: document.getElementById('editsupplierIdField').value
+  }).eq('id', id)
+  closeModal('editsupplierModal')
+  showToast('แก้ไข Supplier เรียบร้อย')
+  await loadsuppliers(); rendersupplierList()
+}
+
+// ===== TYPES PAGE =====
+window.renderTypeList = async function() {
+  if (!allTypes.length) await loadTypes()
+  filterTypeList()
+}
+
+window.filterTypeList = function() {
+  const q = document.getElementById('typeSearch').value.toLowerCase()
+  const filtered = allTypes.filter(t => t.typename?.toLowerCase().includes(q))
+  const grid = document.getElementById('typeGrid')
+  if (!filtered.length) { grid.innerHTML = '<div class="empty">ไม่พบ Type</div>'; return }
+  grid.innerHTML = filtered.map(t => `
+    <div class="manage-card">
+      <div class="manage-card-head">
+        <div><div class="manage-card-name">${t.typename || '—'}</div></div>
+        <div class="manage-card-actions">
+          <button class="btn-edit btn-sm" onclick="openEditType(${t.id})">✏️</button>
+          <button class="btn-danger btn-sm" onclick='openDelete("type",${t.id},${JSON.stringify(t.typename)})'>🗑</button>
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+window.openEditType = function(id) {
+  const t = allTypes.find(x => x.id === id); if (!t) return
+  document.getElementById('editTypeId').value   = id
+  document.getElementById('editTypeName').value = t.typename || ''
+  document.getElementById('editTypeModal').classList.add('open')
+}
+
+window.saveEditType = async function() {
+  const id       = Number(document.getElementById('editTypeId').value)
+  const typename = document.getElementById('editTypeName').value.trim()
+  if (!typename) return showToast('กรุณากรอกชื่อประเภท')
+  await db.from('type').update({ typename }).eq('id', id)
+  closeModal('editTypeModal')
+  showToast('แก้ไข Type เรียบร้อย')
+  await loadTypes(); renderTypeList()
+}
+
+// ===== DELETE (FIXED WITH AUTO-CLEANUP) =====
+window.openDelete = function(table, id, name) {
+  pendingDelete = { table, id, name }
+  document.getElementById('deleteDesc').innerHTML = `ต้องการลบ <strong>${name}</strong>? <br><small style="color:var(--danger)">ข้อมูลที่เกี่ยวข้องในสต็อกและบิลจะถูกลบไปด้วย</small>`
+  document.getElementById('deleteModal').classList.add('open')
+}
+
+window.confirmDelete = async function() {
+  if (!pendingDelete) return
+  const { table, id, name } = pendingDelete;
+
+  // 1. เคลียร์ข้อมูลที่มี Foreign Key ผูกอยู่ก่อน เพื่อให้ลบได้
+  if (table === 'product') {
+    await db.from('inventory').delete().eq('nameid', id);
+    await db.from('billvoice_item').delete().eq('productid', id);
+    // กรณีมีตาราง salebill_item (ถ้ามี) ให้ปลดคอมเมนต์บรรทัดล่าง
+    // await db.from('salebill_item').delete().eq('productid', id);
+  } else if (table === 'supplier') {
+    // ลบ items ในบิลของ supplier นี้ก่อน
+    const { data: bills } = await db.from('billvoice').select('id').eq('supplierid', id);
+    if (bills && bills.length > 0) {
+      const billIds = bills.map(b => b.id);
+      await db.from('billvoice_item').delete().in('billid', billIds);
+      await db.from('billvoice').delete().eq('supplierid', id);
+    }
+  } else if (table === 'type') {
+    // เปลี่ยนสินค้าที่มี type นี้ให้เป็น NULL หรือลบสินค้าประเภทนี้ออก (ในที่นี้เลือกเปลี่ยนเป็น NULL หรือลบ)
+    // สำหรับการลบประเภท แนะนำให้ลบสินค้าที่ผูกอยู่ก่อน (ผ่าน logic product ด้านบน)
+  }
+
+  // 2. ลบข้อมูลหลัก
+  const { error } = await db.from(table).delete().eq('id', id)
+  
+  if (error) {
+    console.error("Delete Error:", error);
+    return showToast('ไม่สามารถลบได้: ' + error.message);
+  }
+  
+  closeModal('deleteModal');
+  showToast(`ลบ "${name}" เรียบร้อย`);
+  
+  pendingDelete = null;
+  if (table === 'product')  { await loadproducts();  renderproductList(); }
+  if (table === 'supplier') { await loadsuppliers(); rendersupplierList(); }
+  if (table === 'type')     { await loadTypes();     renderTypeList(); }
+}
+
+// ===== STOCK =====
+window.setStockFilter = function(f, el) {
+  currentStockFilter = f
+  document.querySelectorAll('.stock-filter-btn').forEach(b => b.classList.remove('active'))
+  el.classList.add('active'); filterStock()
+}
+
+window.renderStock = async function() {
+  await Promise.all([loadproducts(), loadInventory()])
+  allStockData = allproducts.map(p => {
+    const invRows = allInventory.filter(i => i.nameid === p.id)
+    const stock   = invRows.reduce((s, i) => s + (i.quantity || 0), 0)
+    const locs    = [...new Set(invRows.map(i => i.locationName))].filter(Boolean).join(', ') || '—'
+    return { ...p, stock, locations: locs }
+  })
+  document.getElementById('stockTotal').textContent = allStockData.length
+  document.getElementById('stockLow').textContent   = allStockData.filter(p => p.stock > 0 && p.stock < 15).length
+  document.getElementById('stockOut').textContent   = allStockData.filter(p => p.stock <= 0).length
+  filterStock()
+}
+
+function renderStockTable(data) {
+  const tbody = document.getElementById('stockTable')
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty">ไม่พบข้อมูล</div></td></tr>'; return }
+  tbody.innerHTML = data.map(p => {
+    const pct   = Math.min(100, p.stock * 2)
+    const color = p.stock <= 0 ? 'var(--danger)' : p.stock < 15 ? 'var(--warning)' : 'var(--primary)'
+    const badge = p.stock <= 0
+      ? '<span class="badge badge-red">หมด</span>'
+      : p.stock < 15
+        ? '<span class="badge badge-orange">ใกล้หมด</span>'
+        : '<span class="badge badge-green">ปกติ</span>'
+    return `<tr>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.typeName || '—'}</td>
+      <td style="font-size:.78rem;color:var(--dim)">${p.locations}</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${Number(p.price||0).toLocaleString()} ฿</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace">${p.stock}</span>
+        <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div></td>
+      <td>${badge}</td>
+    </tr>`
+  }).join('')
+}
+
+window.filterStock = function() {
+  const q = document.getElementById('stockSearch').value.toLowerCase()
+  let data = allStockData.filter(p =>
+    p.name?.toLowerCase().includes(q) ||
+    p.typeName?.toLowerCase().includes(q) ||
+    p.locations?.toLowerCase().includes(q)
+  )
+  if (currentStockFilter === 'low') data = data.filter(p => p.stock > 0 && p.stock < 15)
+  if (currentStockFilter === 'out') data = data.filter(p => p.stock <= 0)
+  renderStockTable(data)
+}
+
+// ===== CANCEL BILL (BILLVOICE) =====
+let pendingCancelBillId = null
+
+window.openCancelBillModal = function(billId, supplierName, totalcost) {
+  pendingCancelBillId = billId
+  document.getElementById('cancelBillDesc').innerHTML =
+    `บิล <strong>#${String(billId).padStart(6,'0')}</strong> &middot; ${supplierName}<br>` +
+    `<span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${Number(totalcost).toLocaleString()} ฿</span>`
+  document.getElementById('cancelBillModal').classList.add('open')
+}
+
+window.confirmCancelBill = async function() {
+  if (!pendingCancelBillId) return
+  const billId = pendingCancelBillId
+  const { data: items, error: e1 } = await db.from('billvoice_item').select('productid, locationid, quantity').eq('billid', billId)
+  if (e1) { showToast('Error โหลดรายการ: ' + e1.message); return }
+  for (const item of (items || [])) {
+    const { data: inv } = await db.from('inventory').select('id, quantity').eq('nameid', item.productid).eq('locationid', item.locationid).maybeSingle()
+    if (inv) {
+      const newQty = Math.max(0, inv.quantity - item.quantity)
+      await db.from('inventory').update({ quantity: newQty }).eq('id', inv.id)
+    }
+  }
+  const { error: e2 } = await db.from('billvoice').update({ status: 'cancelled' }).eq('id', billId)
+  if (e2) { showToast('Error ยกเลิกบิล: ' + e2.message); return }
+  const billData = allBillsDisplay.find(b => b.id === billId)
+  await writeLog('cancel_bill', 'billvoice', billId,
+    `ยกเลิกบิลขาเข้า #${String(billId).padStart(6,'0')} supplier: ${billData?.supplierName || '—'} มูลค่า ${Number(billData?.totalcost||0).toLocaleString()} ฿`
+  )
+  closeModal('cancelBillModal'); pendingCancelBillId = null; showToast(`ยกเลิกบิล #${String(billId).padStart(6,'0')} เรียบร้อย`);
+  await renderBillHistory()
+}
+
+// ===== LOG PAGE =====
+let allLogData = []
+window.renderLog = async function() {
+  document.getElementById('logList').innerHTML = '<div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div>'
+  const { data, error } = await db.from('log').select('*').order('created_at', { ascending: false }).limit(500)
+  if (error) { console.error('renderLog:', error.message); return }
+  allLogData = data || []
+  const today = new Date().toDateString()
+  document.getElementById('logCountAll').textContent   = allLogData.length
+  document.getElementById('logCountToday').textContent = allLogData.filter(l => new Date(l.created_at).toDateString() === today).length
+  document.getElementById('logCountBill').textContent  = allLogData.filter(l => l.action === 'create_bill').length
+  document.getElementById('logCountSale').textContent  = allLogData.filter(l => l.action === 'sale').length
+  filterLog()
+}
+
+window.filterLog = function() {
+  const q      = (document.getElementById('logSearch')?.value || '').toLowerCase()
+  const action = document.getElementById('logActionFilter')?.value || ''
+  const from   = document.getElementById('logDateFrom')?.value
+  const to     = document.getElementById('logDateTo')?.value
+  let filtered = allLogData.filter(l => {
+    if (action && l.action !== action) return false
+    if (from && new Date(l.created_at) < new Date(from)) return false
+    if (to   && new Date(l.created_at) > new Date(to + 'T23:59:59')) return false
+    if (q && !l.username?.toLowerCase().includes(q) && !l.detail?.toLowerCase().includes(q) && !String(l.bill_id || '').includes(q)) return false
+    return true
+  })
+  const el = document.getElementById('logList')
+  if (!filtered.length) { el.innerHTML = '<div class="empty">ไม่พบ Log</div>'; return }
+  const actionLabel = {
+    create_bill: ['สร้างบิลขาเข้า', 'log-create-bill'], view_bill: ['เปิดดูบิล', 'log-view-bill'],
+    sale: ['ขายสินค้า', 'log-sale'], mark_paid: ['รับชำระ', 'log-paid'],
+    cancel_bill: ['ยกเลิกบิล', 'log-cancel'], cancel_sale: ['ยกเลิกบิลขาย', 'log-cancel'], return: ['คืนสินค้า', 'log-cancel'],
+  }
+  el.innerHTML = filtered.map(l => {
+    const dt = new Date(l.created_at); const dateStr = dt.toLocaleDateString('th-TH'); const timeStr = dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    const [label, cls] = actionLabel[l.action] || [l.action, 'log-view-bill']
+    const isAdmin = l.rank === 'admin'; const rankHtml = `<span class="user-rank-chip ${isAdmin ? 'rank-admin' : 'rank-staff'}" style="font-size:.62rem">${isAdmin ? 'ADMIN' : 'STAFF'}</span>`
+    return `<div class="log-row">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--dim)">${dateStr}<br><span style="color:var(--text)">${timeStr}</span></span>
+      <span style="font-weight:600;font-size:.85rem">${l.username}</span>
+      <span>${rankHtml}</span>
+      <span style="font-size:.82rem;color:var(--dim)">${l.detail || '—'}</span>
+      <span><span class="log-action-badge ${cls}">${label}</span></span>
+    </div>`
+  }).join('')
+}
+
+// ===== MODAL / TOAST =====
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open') }
+window.showToast  = function(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = '✓ ' + msg; t.style.display = 'block'
+  setTimeout(() => t.style.display = 'none', 2800)
+}
+
+// ===== AUTH CHECK =====
+function checkAuth() {
+  const saved = sessionStorage.getItem('currentUser')
+  if (!saved) { window.location.href = 'login.html'; return null }
+  try { return JSON.parse(saved) } catch { sessionStorage.removeItem('currentUser'); window.location.href = 'login.html'; return null }
+}
+
+function renderNavUser(user) {
+  document.getElementById('navUsername').textContent = user.username || '—'
+  const badge = document.getElementById('navRankBadge'); const isAdmin = user.rank === 'admin'
+  badge.textContent = isAdmin ? 'ADMIN' : 'STAFF'; badge.className = 'user-rank-chip ' + (isAdmin ? 'rank-admin' : 'rank-staff')
+}
+
+window.doLogout = function() { sessionStorage.removeItem('currentUser'); window.location.href = 'login.html' }
+
+// ===== INIT =====
+const currentUser = checkAuth()
+if (currentUser) {
+  renderNavUser(currentUser)
+  loadsuppliers(); loadTypes(); loadLocations(); loadproducts()
+}
+</script>
+</body>
+</html>

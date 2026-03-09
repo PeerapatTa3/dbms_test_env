@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{--bg:#0d0d0d;--card:#161616;--card2:#1c1c1c;--primary:#00e676;--secondary:#ff6d00;--danger:#ff4444;--warning:#ffb300;--info:#29b6f6;--border:#2a2a2a;--border2:#333;--text:#f0f0f0;--dim:#888;--input:#1a1a1a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topnav{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:#111;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.nav-brand{font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--primary);letter-spacing:2px}
+.nav-tabs{display:flex;gap:4px}
+.nav-tab{padding:7px 16px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-family:'IBM Plex Sans Thai',sans-serif;font-size:.85rem;border-radius:6px;transition:all .2s}
+.nav-tab.active{background:var(--primary);color:#000;font-weight:600}
+.nav-tab:hover:not(.active){background:#1e1e1e;color:var(--text)}
+.page{display:none;padding:24px 28px}.page.active{display:block}
+.card{background:var(--card);padding:18px;border-radius:10px;border:1px solid var(--border);margin-bottom:14px}
+.card-title{font-size:.78rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:14px}
+label{display:block;font-size:.75rem;color:var(--dim);margin-bottom:4px;margin-top:10px}
+label:first-of-type{margin-top:0}
+input[type=text],input[type=number],select{width:100%;padding:8px 10px;background:var(--input);border:1px solid var(--border2);color:var(--text);border-radius:6px;font-family:'IBM Plex Sans Thai',sans-serif;font-size:.9rem;outline:none;transition:border .2s;margin-bottom:8px}
+input:focus,select:focus{border-color:var(--primary)}
+select option{background:#1a1a1a}
+button{padding:9px 16px;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;transition:all .2s;font-family:'IBM Plex Sans Thai',sans-serif}
+button:active{transform:scale(.98)}
+.btn-primary{background:var(--primary);color:#000;width:100%}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:transparent;border:1px solid var(--border2);color:var(--dim)}
+.btn-ghost:hover{border-color:var(--primary);color:var(--primary)}
+.btn-sm{padding:4px 10px;font-size:.75rem;width:auto}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--border2);color:var(--dim);font-size:.72rem;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+td{padding:8px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#1a1a1a}
+.badge{padding:3px 9px;border-radius:20px;font-size:.68rem;font-weight:600;font-family:'JetBrains Mono',monospace}
+.badge-green{background:rgba(0,230,118,.15);color:var(--primary);border:1px solid rgba(0,230,118,.3)}
+.badge-red{background:rgba(255,68,68,.15);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+.badge-orange{background:rgba(255,109,0,.15);color:var(--secondary);border:1px solid rgba(255,109,0,.3)}
+.badge-blue{background:rgba(41,182,246,.15);color:var(--info);border:1px solid rgba(41,182,246,.3)}
+/* SELL */
+.sell-layout{display:grid;grid-template-columns:1fr 1.4fr;gap:16px}
+.product-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;max-height:480px;overflow-y:auto;padding-right:4px}
+.product-grid::-webkit-scrollbar{width:4px}
+.product-grid::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.product-tile{background:#1a1a1a;border:1px solid var(--border2);border-radius:8px;padding:12px 10px;cursor:pointer;transition:all .2s;text-align:center}
+.product-tile:hover{border-color:var(--primary);transform:translateY(-2px)}
+.product-tile.out{opacity:.4;pointer-events:none}
+.tile-name{font-size:.82rem;font-weight:600;margin-bottom:4px}
+.tile-type{font-size:.7rem;color:var(--dim);margin-bottom:6px}
+.tile-stock{font-family:'JetBrains Mono',monospace;font-size:.75rem}
+.tile-price{color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:.85rem;margin-top:4px}
+.search-filter{display:flex;gap:8px;margin-bottom:12px}
+.search-filter input,.search-filter select{margin-bottom:0}
+.search-filter input{flex:1}
+.search-filter select{width:auto;min-width:120px}
+.cart-item{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);gap:8px}
+.cart-item:last-child{border-bottom:none}
+.cart-info{flex:1}
+.cart-name{font-size:.85rem;font-weight:600}
+.cart-sub{font-size:.73rem;color:var(--dim);margin-top:2px}
+.cart-qty{display:flex;align-items:center;gap:6px}
+.qty-btn{width:26px;height:26px;border-radius:5px;background:var(--border2);color:var(--text);border:none;cursor:pointer;font-size:.9rem;font-weight:600;display:flex;align-items:center;justify-content:center;transition:background .15s}
+.qty-btn:hover{background:var(--primary);color:#000}
+.qty-num{font-family:'JetBrains Mono',monospace;font-size:.85rem;min-width:24px;text-align:center}
+.cart-price{font-family:'JetBrains Mono',monospace;color:var(--secondary);font-size:.88rem;min-width:70px;text-align:right}
+.cart-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:8px;border-top:1px solid var(--border2)}
+.total-label{font-size:.8rem;color:var(--dim)}
+.total-val{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:600;color:var(--primary)}
+/* STOCK */
+.stock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:18px}
+.stat-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.stat-lbl{font-size:.7rem;color:var(--dim);letter-spacing:1px;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:6px}
+.stat-num{font-size:1.4rem;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--primary)}
+.stock-bar{height:6px;background:var(--border);border-radius:3px;margin-top:6px;overflow:hidden}
+.stock-bar-fill{height:100%;border-radius:3px;transition:width .5s}
+/* BILLS */
+.bills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.bill-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.bill-head{padding:12px 16px;background:#1a1a1a;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.bill-id{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--dim)}
+.bill-customer{font-weight:600;font-size:.92rem;margin-top:2px}
+.bill-body{padding:12px 16px}
+.bill-row{display:flex;justify-content:space-between;font-size:.8rem;padding:4px 0;border-bottom:1px solid var(--border)}
+.bill-row:last-child{border-bottom:none}
+.bill-foot{padding:10px 16px;background:#111;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+/* CUSTOMERS */
+.customers-layout{display:grid;grid-template-columns:300px 1fr;gap:16px}
+/* NAV RIGHT */
+.nav-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.user-chip{display:flex;align-items:center;gap:7px;background:#1a1a1a;border:1px solid var(--border2);border-radius:20px;padding:5px 14px 5px 10px;font-size:.78rem;color:var(--dim);font-family:'JetBrains Mono',monospace}
+.user-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.user-rank-chip{padding:2px 8px;border-radius:10px;font-size:.65rem;font-weight:700;font-family:'JetBrains Mono',monospace}
+.rank-admin{background:rgba(255,109,0,.15);color:var(--secondary);border:1px solid rgba(255,109,0,.3)}
+.rank-staff{background:rgba(0,230,118,.15);color:var(--primary);border:1px solid rgba(0,230,118,.3)}
+.btn-logout{padding:6px 14px;background:rgba(255,68,68,.1);border:1px solid rgba(255,68,68,.25);color:var(--danger);border-radius:6px;font-size:.78rem;cursor:pointer;transition:all .2s;white-space:nowrap;width:auto;font-family:'IBM Plex Sans Thai',sans-serif}
+.btn-logout:hover{background:rgba(255,68,68,.22);border-color:var(--danger)}
+.badge-cancelled{background:rgba(255,68,68,.12);color:var(--danger);border:1px solid rgba(255,68,68,.3)}
+.badge-returned{background:rgba(156,39,176,.15);color:#ce93d8;border:1px solid rgba(156,39,176,.3)}
+/* RETURN MODAL */
+.return-item-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);gap:10px}
+.return-item-row:last-child{border-bottom:none}
+.return-item-info{flex:1}
+.return-item-name{font-size:.88rem;font-weight:600}
+.return-item-sub{font-size:.74rem;color:var(--dim);margin-top:2px}
+.return-qty-wrap{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.return-qty-wrap input[type=number]{width:64px;text-align:center;padding:6px 8px;margin-bottom:0}
+.return-refund{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--warning);min-width:70px;text-align:right;flex-shrink:0}
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:999;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#1a1a1a;border:1px solid var(--border2);border-radius:14px;padding:28px;width:90%;max-width:420px;max-height:90vh;overflow-y:auto}
+.modal h3{margin-bottom:8px;font-size:1.05rem}
+.modal p{color:var(--dim);font-size:.85rem;margin-bottom:4px;line-height:1.6}
+.modal-btns{display:flex;gap:10px;margin-top:18px}
+.modal-btns button{flex:1}
+/* RECEIPT */
+.receipt{font-family:'JetBrains Mono',monospace;background:#fff;color:#000;padding:20px;border-radius:8px;max-width:320px;margin:0 auto;font-size:.8rem}
+.receipt-title{text-align:center;font-size:1rem;font-weight:700;margin-bottom:4px}
+.receipt-sub{text-align:center;color:#666;font-size:.72rem;margin-bottom:4px}
+.receipt-divider{border:none;border-top:1px dashed #ccc;margin:8px 0}
+.receipt-row{display:flex;justify-content:space-between;margin:3px 0}
+.receipt-total{display:flex;justify-content:space-between;font-size:.95rem;font-weight:700;margin-top:8px;padding-top:8px;border-top:2px solid #000}
+.receipt-footer{text-align:center;margin-top:12px;font-size:.7rem;color:#888}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1a1a1a;border:1px solid var(--primary);color:var(--primary);padding:10px 22px;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:.82rem;z-index:9999;display:none}
+.empty{text-align:center;padding:40px;color:var(--dim);font-size:.85rem}
+.loading-spin{display:flex;flex-direction:column;align-items:center;gap:10px;padding:40px;color:var(--dim);font-family:'JetBrains Mono',monospace;font-size:.8rem}
+.spinner{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media print{body *{visibility:hidden}#printArea,#printArea *{visibility:visible}#printArea{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}}
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-brand">&#x2B21; STAFF PANEL</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('sell',this)">&#x1F6D2; ขายสินค้า</button>
+    <button class="nav-tab" onclick="showPage('stock',this)">&#x1F4E6; สต็อก</button>
+    <button class="nav-tab" onclick="showPage('bills',this)">&#x1F9FE; บิลขาย</button>
+    <button class="nav-tab" onclick="showPage('customers',this)">&#x1F464; ลูกค้า</button>
+  </div>
+  <div class="nav-right">
+    <div class="user-chip">
+      <span class="user-dot"></span>
+      <span id="navUsername">—</span>
+      <span class="user-rank-chip rank-staff" id="navRankBadge">—</span>
+    </div>
+    <button class="btn-logout" onclick="doLogout()">&#x1F6AA; ออกจากระบบ</button>
+  </div>
+</nav>
+
+<!-- SELL -->
+<div class="page active" id="page-sell">
+  <div class="sell-layout">
+    <div>
+      <div class="card">
+        <div class="card-title">เลือกสินค้า</div>
+        <div class="search-filter">
+          <input type="text" id="productSearch" placeholder="🔍 ค้นหาสินค้า..." oninput="filterProducts()">
+          <select id="typeFilter" onchange="filterProducts()"><option value="">ทุกประเภท</option></select>
+        </div>
+        <div class="product-grid" id="productGrid">
+          <div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">รายการขาย</div>
+        <div id="cartItems"><div class="empty">ยังไม่มีสินค้า<br>กดเลือกจากรายการซ้ายมือ</div></div>
+        <div class="cart-total">
+          <div class="total-label">ราคารวม</div>
+          <div class="total-val" id="cartTotal">0 ฿</div>
+        </div>
+        <div style="margin-top:14px">
+          <label>ลูกค้า</label>
+          <select id="customerSelect"><option value="">— ลูกค้าทั่วไป —</option></select>
+          <label>ส่วนลด (฿)</label>
+          <input type="number" id="saleDiscount" value="0" min="0">
+          <label>หมายเหตุ</label>
+          <input type="text" id="saleNote" placeholder="หมายเหตุ">
+          <button class="btn-primary" style="margin-top:10px" onclick="confirmSale()">&#x1F4BE; บันทึกและออกบิล</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STOCK -->
+<div class="page" id="page-stock">
+  <div class="stock-stats">
+    <div class="stat-box"><div class="stat-lbl">สินค้าทั้งหมด</div><div class="stat-num" id="stockTotal">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">สต็อกต่ำ (&lt;10)</div><div class="stat-num" id="stockLow" style="color:var(--warning)">—</div></div>
+    <div class="stat-box"><div class="stat-lbl">หมดสต็อก</div><div class="stat-num" id="stockOut" style="color:var(--danger)">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">ข้อมูลสต็อกสินค้า</div>
+    <input type="text" id="stockSearch" placeholder="🔍 ค้นหา..." oninput="filterStock()" style="margin-bottom:14px">
+    <table>
+      <thead><tr><th>สินค้า</th><th>ประเภท</th><th>สถานที่</th><th>ราคาขาย</th><th>สต็อก</th><th>สถานะ</th></tr></thead>
+      <tbody id="stockTable"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BILLS -->
+<div class="page" id="page-bills">
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <input type="text" id="billSearch" placeholder="🔍 ค้นหาลูกค้า, บิล..." oninput="filterBills()" style="max-width:280px;margin-bottom:0">
+    <select id="billStatusFilter" onchange="filterBills()" style="width:auto;margin-bottom:0">
+      <option value="">ทุกสถานะ</option>
+      <option value="pending">รอชำระ</option>
+      <option value="paid">ชำระแล้ว</option>
+      <option value="cancelled">ยกเลิกแล้ว</option>
+    </select>
+  </div>
+  <div class="bills-grid" id="billsGrid">
+    <div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div>
+  </div>
+</div>
+
+<!-- CUSTOMERS -->
+<div class="page" id="page-customers">
+  <div class="customers-layout">
+    <div>
+      <div class="card">
+        <div class="card-title">เพิ่มลูกค้าใหม่</div>
+        <label>ชื่อ-นามสกุล</label>
+        <input type="text" id="custName" placeholder="ชื่อ-นามสกุล">
+        <label>เบอร์โทร</label>
+        <input type="text" minlength="10" maxlength="10" id="custTel" placeholder="เบอร์โทร">
+        <label>ที่อยู่</label>
+        <input type="text" id="custAddress" placeholder="ที่อยู่">
+        <label>เลขบัตรประชาชน</label>
+        <input type="text" minlength="13" maxlength="13" id="custId" placeholder="เลขบัตรประชาชน">
+        <button class="btn-primary" onclick="addCustomer()" style="margin-top:4px">+ เพิ่มลูกค้า</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">รายชื่อลูกค้าทั้งหมด</div>
+      <input type="text" id="custSearch" placeholder="🔍 ค้นหาลูกค้า..." oninput="filterCustomers()" style="margin-bottom:14px">
+      <table>
+        <thead><tr><th>ชื่อ</th><th>เบอร์โทร</th><th>เครดิต</th><th>ที่อยู่</th><th></th></tr></thead>
+        <tbody id="custTable"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ยืนยันขาย -->
+<div class="modal-overlay" id="saleModal">
+  <div class="modal">
+    <h3>&#x2705; ยืนยันการขาย</h3>
+    <p id="saleModalDesc"></p>
+    <div id="saleModalItems" style="margin:10px 0;font-size:.82rem;max-height:200px;overflow-y:auto"></div>
+    <div style="display:flex;justify-content:space-between;font-size:.85rem;padding:4px 0">
+      <span style="color:var(--dim)">ส่วนลด</span>
+      <span id="saleModalDiscount" style="color:var(--warning);font-family:'JetBrains Mono',monospace"></span>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-weight:600;font-size:1rem;padding-top:8px;border-top:1px solid var(--border)">
+      <span>รวมสุทธิ</span><span style="color:var(--primary)" id="saleModalTotal"></span>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeSaleModal()">ยกเลิก</button>
+      <button class="btn-primary" onclick="saveSale()">ยืนยัน + บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ลบลูกค้า -->
+<div class="modal-overlay" id="delCustModal">
+  <div class="modal">
+    <h3>&#x1F5D1; ลบลูกค้า</h3>
+    <p id="delCustDesc"></p>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeDelCust()">ยกเลิก</button>
+      <button class="btn-danger" onclick="confirmDelCust()">ยืนยันลบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal เปลี่ยนสถานะบิล -->
+<div class="modal-overlay" id="billStatusModal">
+  <div class="modal">
+    <h3>&#x1F4B0; อัปเดตสถานะบิล</h3>
+    <p id="billStatusDesc"></p>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('billStatusModal')">ยกเลิก</button>
+      <button class="btn-primary" onclick="confirmPaid()">&#x2705; ชำระแล้ว</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal ยกเลิกบิลขาย -->
+<div class="modal-overlay" id="cancelSaleModal">
+  <div class="modal">
+    <h3>&#x274C; ยกเลิกบิลขาย</h3>
+    <p id="cancelSaleDesc" style="color:var(--dim);font-size:.88rem;margin-bottom:12px"></p>
+    <div style="background:rgba(255,68,68,.07);border:1px solid rgba(255,68,68,.2);border-radius:8px;padding:12px;margin-bottom:4px">
+      <div style="font-size:.8rem;color:var(--danger);font-weight:600;margin-bottom:4px">&#x26A0;&#xFE0F; ผลของการยกเลิก</div>
+      <div style="font-size:.78rem;color:var(--dim);line-height:1.7">
+        &bull; สถานะบิลจะเปลี่ยนเป็น <strong style="color:var(--danger)">ยกเลิกแล้ว</strong><br>
+        &bull; สินค้าทุกรายการจะถูก<strong>คืนเข้า inventory</strong><br>
+        &bull; ยกเลิกได้เฉพาะบิล<strong>รอชำระ</strong>เท่านั้น<br>
+        &bull; การกระทำนี้<strong>ไม่สามารถยกเลิกได้</strong>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('cancelSaleModal')">ปิด</button>
+      <button class="btn-danger" onclick="confirmCancelSale()">&#x274C; ยืนยันยกเลิกบิล</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal คืนสินค้า -->
+<div class="modal-overlay" id="returnModal">
+  <div class="modal" style="max-width:500px">
+    <h3>&#x21A9; คืนสินค้า</h3>
+    <p id="returnModalDesc" style="color:var(--dim);font-size:.82rem;margin-bottom:14px"></p>
+    <div id="returnItemsList"></div>
+    <div style="margin-top:14px">
+      <label>หมายเหตุการคืน</label>
+      <input type="text" id="returnNote" placeholder="เช่น สินค้าชำรุด, ผิดรายการ...">
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0 0;margin-top:4px;border-top:1px solid var(--border2)">
+      <span style="font-size:.8rem;color:var(--dim)">มูลค่าที่คืน</span>
+      <span id="returnTotalAmt" style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;color:var(--warning)">0 ฿</span>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-ghost" onclick="closeModal('returnModal')">ยกเลิก</button>
+      <button style="flex:1;background:rgba(156,39,176,.8);color:#fff;border:none;border-radius:6px;padding:9px;font-weight:600;font-size:.85rem;cursor:pointer" onclick="confirmReturn()">&#x21A9; ยืนยันคืนสินค้า</button>
+    </div>
+  </div>
+</div>
+
+<div id="printArea" style="display:none"><div class="receipt" id="receiptContent"></div></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://xxhfqxrehsummjmpkoxu.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4aGZxeHJlaHN1bW1qbXBrb3h1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDI5NjYsImV4cCI6MjA4ODE3ODk2Nn0.ioFvUUwPddFPUQeDT2CWydTLmI2s-Pd_N_viEFSHSvg'
+const { createClient } = supabase
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+let allProducts=[], allInventory=[], allTypes=[], allCustomers=[]
+let allSaleBills=[], allStockData=[]
+let cart=[], lastCart=[]
+let pendingDelCustId=null, pendingPaidBillId=null
+
+// ===== LOGGING =====
+async function writeLog(action, billType, billId, detail) {
+  const user = JSON.parse(sessionStorage.getItem('currentUser') || '{}')
+  try {
+    await db.from('log').insert({
+      username:   user.username || 'unknown',
+      rank:       user.rank     || 'unknown',
+      action,
+      bill_type:  billType || null,
+      bill_id:    billId   || null,
+      detail:     detail   || null,
+      created_at: new Date().toISOString()
+    })
+  } catch(e) { console.warn('writeLog failed:', e) }
+}
+
+// ===== AUTH CHECK =====
+// ใช้ sessionStorage เดียวกับ login.html (key: 'currentUser')
+function checkAuth() {
+  const saved = sessionStorage.getItem('currentUser')
+  if (!saved) { window.location.href = 'login.html'; return null }
+  try { return JSON.parse(saved) }
+  catch { sessionStorage.removeItem('currentUser'); window.location.href = 'login.html'; return null }
+}
+
+function renderNavUser(user) {
+  document.getElementById('navUsername').textContent = user.username || '—'
+  const badge   = document.getElementById('navRankBadge')
+  const isAdmin = user.rank === 'admin'
+  badge.textContent = isAdmin ? 'ADMIN' : 'STAFF'
+  badge.className   = 'user-rank-chip ' + (isAdmin ? 'rank-admin' : 'rank-staff')
+}
+
+window.doLogout = function() {
+  sessionStorage.removeItem('currentUser')
+  window.location.href = 'login.html'
+}
+
+// ===== NAV =====
+window.showPage = function(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'))
+  document.getElementById('page-' + name).classList.add('active')
+  el.classList.add('active')
+  if (name === 'stock')     renderStock()
+  if (name === 'bills')     renderBills()
+  if (name === 'customers') renderCustomers()
+}
+
+// ===== LOAD ALL =====
+async function loadAll() {
+  const [pRes, iRes, tRes, cRes] = await Promise.all([
+    db.from('product').select('id, name, price, typeid, type(typename)'),
+    db.from('inventory').select('id, nameid, locationid, quantity, location(locationname)'),
+    db.from('type').select('*').order('typename'),
+    db.from('consumer').select('*').order('name')
+  ])
+  allProducts  = (pRes.data||[]).map(p => ({ ...p, typeName: p.type?.typename || '—' }))
+  allInventory = (iRes.data||[]).map(i => ({ ...i, locationName: i.location?.locationname || '—' }))
+  allTypes     = tRes.data || []
+  allCustomers = cRes.data || []
+  buildTypeFilter()
+  renderProductGrid()
+  loadCustomerDropdown()
+}
+
+function buildTypeFilter() {
+  const sel = document.getElementById('typeFilter')
+  sel.innerHTML = '<option value="">ทุกประเภท</option>' +
+    allTypes.map(t => `<option value="${t.id}">${t.typename}</option>`).join('')
+}
+
+function loadCustomerDropdown() {
+  const sel = document.getElementById('customerSelect')
+  sel.innerHTML = '<option value="">— ลูกค้าทั่วไป —</option>' +
+    allCustomers.map(c => `<option value="${c.id}">${c.name}${c.tel ? ' (' + c.tel + ')' : ''}</option>`).join('')
+}
+
+// ===== SELL =====
+function getStock(productId) {
+  return allInventory.filter(i => i.nameid === productId).reduce((s, i) => s + (i.quantity || 0), 0)
+}
+
+window.filterProducts = function() { renderProductGrid() }
+
+function renderProductGrid() {
+  const grid = document.getElementById('productGrid')
+  const q    = document.getElementById('productSearch').value.toLowerCase()
+  const tf   = Number(document.getElementById('typeFilter').value) || 0
+  let filtered = allProducts.filter(p => {
+    if (tf && p.typeid !== tf) return false
+    if (q && !p.name?.toLowerCase().includes(q)) return false
+    return true
+  })
+  if (!filtered.length) { grid.innerHTML = '<div class="empty">ไม่พบสินค้า</div>'; return }
+  grid.innerHTML = filtered.map(p => {
+    const stock = getStock(p.id)
+    return `<div class="product-tile${stock <= 0 ? ' out' : ''}" onclick="addToCart(${p.id})">
+      <div class="tile-name">${p.name}</div>
+      <div class="tile-type">${p.typeName}</div>
+      <div class="tile-stock" style="color:${stock < 10 ? 'var(--warning)' : 'var(--dim)'}">สต็อก: ${stock}</div>
+      <div class="tile-price">${Number(p.price||0).toLocaleString()} ฿</div>
+    </div>`
+  }).join('')
+}
+
+window.addToCart = function(pid) {
+  const p = allProducts.find(x => x.id === pid); if (!p) return
+  const stock = getStock(pid)
+  const ex    = cart.find(c => c.productId === pid)
+  if ((ex ? ex.quantity : 0) >= stock) return showToast('สต็อกไม่พอ')
+  if (ex) { ex.quantity++ }
+  else { cart.push({ productId: pid, name: p.name, price: Number(p.price||0), quantity: 1, typeName: p.typeName }) }
+  renderCart()
+}
+
+window.changeQty = function(pid, delta) {
+  const item = cart.find(c => c.productId === pid); if (!item) return
+  item.quantity += delta
+  if (item.quantity <= 0) cart = cart.filter(c => c.productId !== pid)
+  else if (item.quantity > getStock(pid)) { item.quantity = getStock(pid); showToast('จำกัดตามสต็อก') }
+  renderCart()
+}
+
+function renderCart() {
+  const el      = document.getElementById('cartItems')
+  const totalEl = document.getElementById('cartTotal')
+  if (!cart.length) { el.innerHTML = '<div class="empty">ยังไม่มีสินค้า</div>'; totalEl.textContent = '0 ฿'; return }
+  const total = cart.reduce((s, i) => s + i.price * i.quantity, 0)
+  el.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <div class="cart-info">
+        <div class="cart-name">${item.name}</div>
+        <div class="cart-sub">${item.price.toLocaleString()} ฿/ชิ้น &middot; ${item.typeName}</div>
+      </div>
+      <div class="cart-qty">
+        <button class="qty-btn" onclick="changeQty(${item.productId},-1)">&minus;</button>
+        <span class="qty-num">${item.quantity}</span>
+        <button class="qty-btn" onclick="changeQty(${item.productId},1)">+</button>
+      </div>
+      <div class="cart-price">${(item.price * item.quantity).toLocaleString()} ฿</div>
+    </div>`).join('')
+  totalEl.textContent = total.toLocaleString() + ' ฿'
+}
+
+window.confirmSale = function() {
+  if (!cart.length) return showToast('ยังไม่มีสินค้าในตะกร้า')
+  const custId   = document.getElementById('customerSelect').value
+  const custName = custId ? allCustomers.find(c => c.id === Number(custId))?.name || 'ลูกค้าทั่วไป' : 'ลูกค้าทั่วไป'
+  const discount = Number(document.getElementById('saleDiscount').value) || 0
+  const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
+  const total    = Math.max(0, subtotal - discount)
+  document.getElementById('saleModalDesc').textContent = `ลูกค้า: ${custName}`
+  document.getElementById('saleModalItems').innerHTML  = cart.map(i =>
+    `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border)">
+      <span>${i.name} &times;${i.quantity}</span>
+      <span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${(i.price * i.quantity).toLocaleString()} ฿</span>
+    </div>`).join('')
+  document.getElementById('saleModalDiscount').textContent = discount > 0 ? `-${discount.toLocaleString()} ฿` : '—'
+  document.getElementById('saleModalTotal').textContent    = total.toLocaleString() + ' ฿'
+  document.getElementById('saleModal').classList.add('open')
+}
+window.closeSaleModal = () => document.getElementById('saleModal').classList.remove('open')
+
+window.saveSale = async function() {
+  const custId   = document.getElementById('customerSelect').value || null
+  const note     = document.getElementById('saleNote').value
+  const discount = Number(document.getElementById('saleDiscount').value) || 0
+  const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
+  const total    = Math.max(0, subtotal - discount)
+  lastCart = [...cart]
+
+  // 1. สร้าง salebill
+  const { data: bill, error } = await db.from('salebill').insert({
+    consumerid:  custId ? Number(custId) : null,
+    total_price: total,
+    discount,
+    status: 'pending',
+    date:   new Date().toISOString()
+  }).select().single()
+  if (error) return showToast('เกิดข้อผิดพลาด: ' + error.message)
+
+  // 2. insert salebill_item
+  await db.from('salebill_item').insert(
+    cart.map(item => ({ billid: bill.id, productid: item.productId, amount: item.quantity, unit_price: item.price }))
+  )
+
+  // 3. ตัดสต็อก inventory (FIFO ตาม location)
+  for (const item of cart) {
+    let remaining = item.quantity
+    const invItems = allInventory.filter(i => i.nameid === item.productId && i.quantity > 0)
+    for (const inv of invItems) {
+      if (remaining <= 0) break
+      const deduct = Math.min(inv.quantity, remaining)
+      await db.from('inventory').update({ quantity: inv.quantity - deduct }).eq('id', inv.id)
+      inv.quantity -= deduct
+      remaining   -= deduct
+    }
+  }
+
+  const custName = custId ? allCustomers.find(c => c.id === Number(custId))?.name || 'ลูกค้าทั่วไป' : 'ลูกค้าทั่วไป'
+  await writeLog('sale', 'salebill', bill.id,
+    `ขายสินค้า #${String(bill.id).padStart(6,'0')} ลูกค้า: ${custName} รวม ${total.toLocaleString()} ฿ (${lastCart.length} รายการ)`
+  )
+  closeSaleModal()
+  printReceipt(custName, note, total, discount, String(bill.id))
+  cart = []
+  renderCart()
+  renderProductGrid()
+  document.getElementById('saleNote').value    = ''
+  document.getElementById('saleDiscount').value = '0'
+  showToast('บันทึกและออกบิลเรียบร้อย')
+}
+
+function printReceipt(customer, note, total, discount, billId) {
+  const now = new Date().toLocaleString('th-TH')
+  document.getElementById('receiptContent').innerHTML = `
+    <div class="receipt-title">&#x1F3EA; ร้านวัสดุก่อสร้าง</div>
+    <div class="receipt-sub">${now}</div>
+    <div class="receipt-sub">บิล #${String(billId).padStart(6,'0')}</div>
+    <hr class="receipt-divider">
+    <div class="receipt-row"><span>ลูกค้า</span><span>${customer}</span></div>
+    <hr class="receipt-divider">
+    ${lastCart.map(i => `<div class="receipt-row"><span>${i.name} &times;${i.quantity}</span><span>${(i.price*i.quantity).toLocaleString()} ฿</span></div>`).join('')}
+    <hr class="receipt-divider">
+    ${discount > 0 ? `<div class="receipt-row"><span>ส่วนลด</span><span>-${discount.toLocaleString()} ฿</span></div>` : ''}
+    <div class="receipt-total"><span>รวมทั้งหมด</span><span>${total.toLocaleString()} ฿</span></div>
+    ${note ? `<div class="receipt-row" style="margin-top:8px"><span>หมายเหตุ</span><span>${note}</span></div>` : ''}
+    <div class="receipt-footer">ขอบคุณที่ใช้บริการ</div>`
+  document.getElementById('printArea').style.display = 'flex'
+  setTimeout(() => { window.print(); document.getElementById('printArea').style.display = 'none' }, 300)
+}
+
+// ===== STOCK =====
+window.renderStock = async function() {
+  await loadAll()
+  allStockData = allProducts.map(p => {
+    const invRows = allInventory.filter(i => i.nameid === p.id)
+    const stock   = invRows.reduce((s, i) => s + (i.quantity || 0), 0)
+    const locs    = [...new Set(invRows.map(i => i.locationName))].filter(Boolean).join(', ') || '—'
+    return { ...p, stock, locations: locs }
+  })
+  document.getElementById('stockTotal').textContent = allStockData.length
+  document.getElementById('stockLow').textContent   = allStockData.filter(p => p.stock > 0 && p.stock < 10).length
+  document.getElementById('stockOut').textContent   = allStockData.filter(p => p.stock <= 0).length
+  renderStockTable(allStockData)
+}
+
+function renderStockTable(data) {
+  const tbody = document.getElementById('stockTable')
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="6"><div class="empty">ไม่พบข้อมูล</div></td></tr>'; return }
+  tbody.innerHTML = data.map(p => {
+    const pct   = Math.min(100, p.stock * 2)
+    const color = p.stock <= 0 ? 'var(--danger)' : p.stock < 10 ? 'var(--warning)' : 'var(--primary)'
+    const badge = p.stock <= 0
+      ? '<span class="badge badge-red">หมด</span>'
+      : p.stock < 10
+        ? '<span class="badge badge-orange">ต่ำ</span>'
+        : '<span class="badge badge-green">ปกติ</span>'
+    return `<tr>
+      <td><strong>${p.name}</strong></td>
+      <td>${p.typeName || '—'}</td>
+      <td style="font-size:.78rem;color:var(--dim)">${p.locations}</td>
+      <td><span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${Number(p.price||0).toLocaleString()} ฿</span></td>
+      <td><span style="font-family:'JetBrains Mono',monospace">${p.stock}</span>
+        <div class="stock-bar"><div class="stock-bar-fill" style="width:${pct}%;background:${color}"></div></div></td>
+      <td>${badge}</td>
+    </tr>`
+  }).join('')
+}
+
+window.filterStock = function() {
+  const q = document.getElementById('stockSearch').value.toLowerCase()
+  renderStockTable(allStockData.filter(p => p.name?.toLowerCase().includes(q) || p.typeName?.toLowerCase().includes(q)))
+}
+
+// ===== BILLS =====
+window.renderBills = async function() {
+  const { data } = await db.from('salebill')
+    .select('id, date, status, total_price, discount, consumer(name)')
+    .order('date', { ascending: false })
+  allSaleBills = (data||[]).map(b => ({ ...b, customerName: b.consumer?.name || 'ลูกค้าทั่วไป' }))
+  filterBills()
+}
+
+window.filterBills = function() {
+  const q  = (document.getElementById('billSearch')?.value || '').toLowerCase()
+  const st = document.getElementById('billStatusFilter')?.value || ''
+  let filtered = allSaleBills.filter(b => {
+    if (q  && !b.customerName.toLowerCase().includes(q) && !String(b.id).includes(q)) return false
+    if (st && b.status !== st) return false
+    return true
+  })
+  renderBillsGrid(filtered)
+}
+
+async function renderBillsGrid(bills) {
+  const grid = document.getElementById('billsGrid')
+  if (!bills.length) { grid.innerHTML = '<div class="empty">ไม่พบบิล</div>'; return }
+  const billIds = bills.map(b => b.id)
+  const { data: itemsData } = await db.from('salebill_item')
+    .select('billid, amount, unit_price, product(name)')
+    .in('billid', billIds)
+  const itemsMap = {}
+  ;(itemsData||[]).forEach(i => {
+    if (!itemsMap[i.billid]) itemsMap[i.billid] = []
+    itemsMap[i.billid].push(i)
+  })
+  grid.innerHTML = bills.map(b => {
+    const dateStr      = b.date ? new Date(b.date).toLocaleString('th-TH') : '—'
+    const items        = itemsMap[b.id] || []
+    const rows         = items.map(i => `
+      <div class="bill-row">
+        <span>${i.product?.name || '—'} &times;${i.amount}</span>
+        <span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${(i.unit_price * i.amount).toLocaleString()} ฿</span>
+      </div>`).join('')
+    const isPending    = b.status === 'pending'
+    const isCancelled  = b.status === 'cancelled'
+    const statusBadge  = isCancelled
+      ? '<span class="badge badge-cancelled">ยกเลิกแล้ว</span>'
+      : isPending
+        ? '<span class="badge badge-orange">รอชำระ</span>'
+        : '<span class="badge badge-green">ชำระแล้ว</span>'
+    return `<div class="bill-card" style="${isCancelled ? 'opacity:.55' : ''}">
+      <div class="bill-head">
+        <div>
+          <div class="bill-id">#${String(b.id).padStart(6,'0')} &middot; ${dateStr}</div>
+          <div class="bill-customer">${b.customerName}</div>
+        </div>
+        ${statusBadge}
+      </div>
+      <div class="bill-body">
+        ${rows || '<div style="color:var(--dim);font-size:.8rem;padding:8px 0">ไม่พบรายการ</div>'}
+        ${b.discount > 0 ? `<div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--warning);padding:4px 0"><span>ส่วนลด</span><span>-${Number(b.discount).toLocaleString()} ฿</span></div>` : ''}
+      </div>
+      <div class="bill-foot">
+        <div style="display:flex;gap:8px">
+          ${isPending ? `<button class="btn-primary btn-sm" onclick="openPaidModal(${b.id})">&#x1F4B0; รับชำระ</button>` : ''}
+          ${isPending ? `<button class="btn-danger btn-sm" onclick="openCancelSaleModal(${b.id},${JSON.stringify(b.customerName)},${b.total_price||0})">&#x274C; ยกเลิก</button>` : ''}
+          ${!isCancelled ? `<button class="btn-sm" style="background:rgba(156,39,176,.15);border:1px solid rgba(156,39,176,.3);color:#ce93d8" onclick="openReturnModal(${b.id},${JSON.stringify(b.customerName)})">&#x21A9; คืนสินค้า</button>` : ''}
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;color:var(--primary);font-weight:600">${Number(b.total_price||0).toLocaleString()} ฿</div>
+      </div>
+    </div>`
+  }).join('')
+}
+
+window.openPaidModal = function(billId) {
+  pendingPaidBillId = billId
+  document.getElementById('billStatusDesc').textContent = `บิล #${String(billId).padStart(6,'0')} — ยืนยันว่าลูกค้าชำระเงินแล้ว?`
+  document.getElementById('billStatusModal').classList.add('open')
+}
+window.confirmPaid = async function() {
+  if (!pendingPaidBillId) return
+  await db.from('salebill').update({ status: 'paid' }).eq('id', pendingPaidBillId)
+  await writeLog('mark_paid', 'salebill', pendingPaidBillId,
+    `รับชำระบิลขาย #${String(pendingPaidBillId).padStart(6,'0')}`
+  )
+  closeModal('billStatusModal')
+  showToast('อัปเดตสถานะเรียบร้อย')
+  pendingPaidBillId = null
+  await renderBills()
+}
+
+// ===== CUSTOMERS =====
+window.renderCustomers = async function() {
+  const { data } = await db.from('consumer').select('*').order('name')
+  allCustomers = data || []
+  loadCustomerDropdown()
+  renderCustTable(allCustomers)
+}
+
+function renderCustTable(data) {
+  const tbody = document.getElementById('custTable')
+  if (!data.length) { tbody.innerHTML = '<tr><td colspan="5"><div class="empty">ยังไม่มีลูกค้า</div></td></tr>'; return }
+  tbody.innerHTML = data.map(u => `<tr>
+    <td><strong>${u.name || '—'}</strong></td>
+    <td style="font-family:'JetBrains Mono',monospace;font-size:.8rem">${u.tel || '—'}</td>
+    <td style="font-family:'JetBrains Mono',monospace;color:var(--secondary);font-size:.8rem">${Number(u.credit||0).toLocaleString()} ฿</td>
+    <td style="color:var(--dim);font-size:.78rem">${u.address || '—'}</td>
+    <td><button class="btn-danger btn-sm" onclick="openDelCust(${JSON.stringify(u.uid)},${JSON.stringify(u.name)})">ลบ</button></td>
+  </tr>`).join('')
+}
+
+window.filterCustomers = function() {
+  const q = document.getElementById('custSearch').value.toLowerCase()
+  renderCustTable(allCustomers.filter(u => u.name?.toLowerCase().includes(q) || u.tel?.includes(q)))
+}
+
+window.addCustomer = async function() {
+  const name = document.getElementById('custName').value.trim()
+  if (!name) return showToast('กรุณากรอกชื่อลูกค้า')
+  const { error } = await db.from('consumer').insert({
+    name,
+    tel:     document.getElementById('custTel').value,
+    address: document.getElementById('custAddress').value,
+    uid:     document.getElementById('custId').value
+  })
+  if (error) return showToast('เกิดข้อผิดพลาด: ' + error.message)
+  ;['custName','custTel','custAddress','custId'].forEach(id => document.getElementById(id).value = '')
+  showToast('เพิ่มลูกค้าเรียบร้อย')
+  await renderCustomers()
+}
+
+window.openDelCust = function(id, name) {
+  pendingDelCustId = id
+  document.getElementById('delCustDesc').innerHTML = `ต้องการลบ <strong>${name}</strong> ออกจากระบบ?`
+  document.getElementById('delCustModal').classList.add('open')
+}
+window.closeDelCust = () => { document.getElementById('delCustModal').classList.remove('open'); pendingDelCustId = null }
+window.confirmDelCust = async function() {
+  if (!pendingDelCustId) return
+  await db.from('consumer').delete().eq('uid', pendingDelCustId)
+  closeDelCust()
+  showToast('ลบลูกค้าเรียบร้อย')
+  await renderCustomers()
+}
+
+// ===== CANCEL SALE BILL =====
+let pendingCancelSaleId = null
+
+window.openCancelSaleModal = function(billId, customerName, totalPrice) {
+  pendingCancelSaleId = billId
+  document.getElementById('cancelSaleDesc').innerHTML =
+    `บิล <strong>#${String(billId).padStart(6,'0')}</strong> &middot; ${customerName}<br>` +
+    `<span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${Number(totalPrice).toLocaleString()} ฿</span>`
+  document.getElementById('cancelSaleModal').classList.add('open')
+}
+
+window.confirmCancelSale = async function() {
+  if (!pendingCancelSaleId) return
+  const billId = pendingCancelSaleId
+
+  // 1. โหลด items ของบิลนี้
+  const { data: items, error: e1 } = await db.from('salebill_item')
+    .select('productid, amount')
+    .eq('billid', billId)
+  if (e1) { showToast('Error โหลดรายการ: ' + e1.message); return }
+
+  // 2. คืนสต็อก inventory (เพิ่ม quantity กลับ FIFO ใน location แรกที่มี)
+  for (const item of (items || [])) {
+    const { data: invRows } = await db.from('inventory')
+      .select('id, quantity')
+      .eq('nameid', item.productid)
+      .order('id')
+      .limit(1)
+    if (invRows && invRows.length > 0) {
+      await db.from('inventory')
+        .update({ quantity: invRows[0].quantity + item.amount })
+        .eq('id', invRows[0].id)
+    }
+  }
+
+  // 3. อัปเดตสถานะบิลเป็น cancelled
+  const { error: e2 } = await db.from('salebill').update({ status: 'cancelled' }).eq('id', billId)
+  if (e2) { showToast('Error ยกเลิกบิล: ' + e2.message); return }
+
+  // 4. บันทึก log
+  const billData = allSaleBills.find(b => b.id === billId)
+  await writeLog('cancel_sale', 'salebill', billId,
+    `ยกเลิกบิลขาย #${String(billId).padStart(6,'0')} ลูกค้า: ${billData?.customerName || '—'} มูลค่า ${Number(billData?.total_price||0).toLocaleString()} ฿`
+  )
+
+  closeModal('cancelSaleModal')
+  pendingCancelSaleId = null
+  showToast(`ยกเลิกบิล #${String(billId).padStart(6,'0')} เรียบร้อย`)
+  await renderBills()
+  // รีโหลด inventory ในหน่วยความจำด้วย
+  const { data: inv } = await db.from('inventory').select('id, nameid, locationid, quantity, location(locationname)')
+  allInventory = (inv||[]).map(i => ({ ...i, locationName: i.location?.locationname || '—' }))
+  renderProductGrid()
+}
+
+// ===== RETURN BILL =====
+// SQL สำหรับสร้างตาราง return_bill:
+// CREATE TABLE return_bill (
+//   id          SERIAL PRIMARY KEY,
+//   salebill_id INT NOT NULL REFERENCES salebill(id),
+//   created_at  TIMESTAMPTZ DEFAULT NOW(),
+//   note        TEXT,
+//   total_refund NUMERIC DEFAULT 0
+// );
+// CREATE TABLE return_bill_item (
+//   id             SERIAL PRIMARY KEY,
+//   return_bill_id INT NOT NULL REFERENCES return_bill(id),
+//   productid      INT NOT NULL REFERENCES product(id),
+//   amount         INT NOT NULL,
+//   unit_price     NUMERIC NOT NULL
+// );
+
+let returnBillId = null
+let returnBillItems = []   // { productid, name, amount (max), unit_price, returnQty }
+
+window.openReturnModal = async function(billId, customerName) {
+  returnBillId = billId
+
+  // โหลดรายการจาก salebill_item
+  const { data: items } = await db.from('salebill_item')
+    .select('productid, amount, unit_price, product(name)')
+    .eq('billid', billId)
+
+  // ตรวจสอบของที่คืนไปแล้วในบิลนี้ (ถ้ามี return_bill ก่อนหน้า)
+  const { data: prevReturns } = await db.from('return_bill')
+    .select('id')
+    .eq('salebill_id', billId)
+  const prevReturnIds = (prevReturns || []).map(r => r.id)
+
+  let alreadyReturnedMap = {}   // productid → จำนวนที่คืนไปแล้ว
+  if (prevReturnIds.length) {
+    const { data: prevItems } = await db.from('return_bill_item')
+      .select('productid, amount')
+      .in('return_bill_id', prevReturnIds)
+    ;(prevItems || []).forEach(i => {
+      alreadyReturnedMap[i.productid] = (alreadyReturnedMap[i.productid] || 0) + i.amount
+    })
+  }
+
+  returnBillItems = (items || []).map(i => ({
+    productid:    i.productid,
+    name:         i.product?.name || '—',
+    amount:       i.amount,
+    unit_price:   i.unit_price,
+    returned:     alreadyReturnedMap[i.productid] || 0,
+    returnQty:    0
+  })).filter(i => i.amount - i.returned > 0)   // กรองออกถ้าคืนครบแล้ว
+
+  const billData = allSaleBills.find(b => b.id === billId)
+  document.getElementById('returnModalDesc').innerHTML =
+    `บิล <strong>#${String(billId).padStart(6,'0')}</strong> &middot; ${customerName} &middot; ` +
+    `<span style="font-family:'JetBrains Mono',monospace;color:var(--secondary)">${Number(billData?.total_price||0).toLocaleString()} ฿</span>`
+  document.getElementById('returnNote').value = ''
+
+  if (!returnBillItems.length) {
+    document.getElementById('returnItemsList').innerHTML =
+      '<div class="empty" style="padding:20px">คืนสินค้าทุกรายการครบแล้ว</div>'
+    document.getElementById('returnTotalAmt').textContent = '0 ฿'
+    document.getElementById('returnModal').classList.add('open')
+    return
+  }
+
+  renderReturnItems()
+  document.getElementById('returnModal').classList.add('open')
+}
+
+function renderReturnItems() {
+  document.getElementById('returnItemsList').innerHTML = returnBillItems.map((item, idx) => {
+    const maxQty = item.amount - item.returned
+    return `<div class="return-item-row">
+      <div class="return-item-info">
+        <div class="return-item-name">${item.name}</div>
+        <div class="return-item-sub">
+          ขาย ${item.amount} ชิ้น
+          ${item.returned > 0 ? `&middot; คืนแล้ว <span style="color:var(--warning)">${item.returned}</span>` : ''}
+          &middot; คืนได้สูงสุด <strong>${maxQty}</strong> ชิ้น
+          &middot; <span style="color:var(--secondary)">${Number(item.unit_price).toLocaleString()} ฿/ชิ้น</span>
+        </div>
+      </div>
+      <div class="return-qty-wrap">
+        <button onclick="changeReturnQty(${idx},-1)" style="width:28px;height:28px;border-radius:5px;background:var(--border2);color:var(--text);border:none;cursor:pointer;font-weight:700;font-size:1rem">&minus;</button>
+        <input type="number" min="0" max="${maxQty}" value="${item.returnQty}"
+          oninput="setReturnQty(${idx},this.value)"
+          style="width:60px;text-align:center;padding:6px 4px;margin-bottom:0">
+        <button onclick="changeReturnQty(${idx},1)" style="width:28px;height:28px;border-radius:5px;background:var(--border2);color:var(--text);border:none;cursor:pointer;font-weight:700;font-size:1rem">+</button>
+      </div>
+      <div class="return-refund">${item.returnQty > 0 ? (item.returnQty * item.unit_price).toLocaleString() + ' ฿' : '—'}</div>
+    </div>`
+  }).join('')
+  updateReturnTotal()
+}
+
+window.changeReturnQty = function(idx, delta) {
+  const item = returnBillItems[idx]
+  const maxQty = item.amount - item.returned
+  item.returnQty = Math.min(maxQty, Math.max(0, (item.returnQty || 0) + delta))
+  renderReturnItems()
+}
+
+window.setReturnQty = function(idx, val) {
+  const item = returnBillItems[idx]
+  const maxQty = item.amount - item.returned
+  item.returnQty = Math.min(maxQty, Math.max(0, parseInt(val) || 0))
+  updateReturnTotal()
+}
+
+function updateReturnTotal() {
+  const total = returnBillItems.reduce((s, i) => s + (i.returnQty || 0) * i.unit_price, 0)
+  document.getElementById('returnTotalAmt').textContent = total.toLocaleString() + ' ฿'
+}
+
+window.confirmReturn = async function() {
+  const toReturn = returnBillItems.filter(i => i.returnQty > 0)
+  if (!toReturn.length) return showToast('กรุณาเลือกสินค้าที่ต้องการคืน')
+
+  const note        = document.getElementById('returnNote').value
+  const totalRefund = toReturn.reduce((s, i) => s + i.returnQty * i.unit_price, 0)
+
+  // 1. สร้าง return_bill header
+  const { data: rb, error: e1 } = await db.from('return_bill').insert({
+    salebill_id:  returnBillId,
+    note:         note || null,
+    total_refund: totalRefund,
+    created_at:   new Date().toISOString()
+  }).select().single()
+  if (e1) return showToast('Error: ' + e1.message)
+
+  // 2. insert return_bill_item
+  const { error: e2 } = await db.from('return_bill_item').insert(
+    toReturn.map(i => ({
+      return_bill_id: rb.id,
+      productid:      i.productid,
+      amount:         i.returnQty,
+      unit_price:     i.unit_price
+    }))
+  )
+  if (e2) return showToast('Error บันทึกรายการ: ' + e2.message)
+
+  // 3. คืนสต็อก inventory (เพิ่มกลับใน location แรกที่มี)
+  for (const item of toReturn) {
+    const { data: invRows } = await db.from('inventory')
+      .select('id, quantity')
+      .eq('nameid', item.productid)
+      .order('id').limit(1)
+    if (invRows?.length) {
+      await db.from('inventory')
+        .update({ quantity: invRows[0].quantity + item.returnQty })
+        .eq('id', invRows[0].id)
+    }
+  }
+
+  // 4. บันทึก log
+  const names = toReturn.map(i => `${i.name}×${i.returnQty}`).join(', ')
+  await writeLog('return', 'salebill', returnBillId,
+    `คืนสินค้าบิล #${String(returnBillId).padStart(6,'0')} [${names}] มูลค่าคืน ${totalRefund.toLocaleString()} ฿${note ? ' หมายเหตุ: ' + note : ''}`
+  )
+
+  closeModal('returnModal')
+  returnBillId = null
+  returnBillItems = []
+  showToast(`คืนสินค้าเรียบร้อย คืนเงิน ${totalRefund.toLocaleString()} ฿`)
+
+  // รีเฟรช inventory และ product grid
+  const { data: inv } = await db.from('inventory').select('id, nameid, locationid, quantity, location(locationname)')
+  allInventory = (inv||[]).map(i => ({ ...i, locationName: i.location?.locationname || '—' }))
+  renderProductGrid()
+}
+
+// ===== HELPERS =====
+window.closeModal = function(id) { document.getElementById(id).classList.remove('open') }
+window.showToast  = function(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = '✓ ' + msg; t.style.display = 'block'
+  setTimeout(() => t.style.display = 'none', 2800)
+}
+
+// ===== INIT =====
+const currentUser = checkAuth()
+if (currentUser) {
+  renderNavUser(currentUser)
+  loadAll()
+}
+</script>
+</body>
+</html>
