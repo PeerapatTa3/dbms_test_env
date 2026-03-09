@@ -604,33 +604,39 @@ async function loadInventory() {
 // ===== ADD MASTER DATA =====
 // Updated addsupplier with validation and instant UI update
 window.addsupplier = async function() {
-  const name = document.getElementById('supplierName').value.trim()
-  const phone = document.getElementById('supplierPhone').value.trim()
-  const addr = document.getElementById('supplierAddress').value.trim()
-  const cid = document.getElementById('supplierId').value.trim()
+    const name = document.getElementById('supplierName').value.trim()
+    const phone = document.getElementById('supplierPhone').value.trim()
+    const addr = document.getElementById('supplierAddress').value.trim() // Added this
+    const cid = document.getElementById('supplierId').value.trim()
 
-  // Input Validation
-  if (!name || phone.length !== 10 || cid.length !== 13) {
-    return alert('กรุณากรอกข้อมูลให้ครบ (เบอร์โทร 10 หลัก, รหัสบริษัท 13 หลัก)')
+    if (!name || phone.length !== 10 || cid.length !== 13) {
+      return alert('กรุณากรอกข้อมูลให้ครบ (เบอร์โทร 10 หลัก, รหัส 13 หลัก)')
+    }
+
+    try {
+      const { data, error } = await db.from('supplier').insert({ 
+        name, 
+        phone, 
+        address: addr, // Now saving the address to the database
+        companyid: cid 
+      }).select()
+      
+      if (error) throw error
+      
+      // Update local state so it shows in dropdowns immediately
+      allsuppliers.push(data[0])
+      dropdowns['sd-supplier'].updateItems(allsuppliers.map(s => ({ label: s.name, value: s.id })))
+      
+      showToast('เพิ่ม Supplier สำเร็จ')
+      // Clear inputs
+      document.getElementById('supplierName').value = ''
+      document.getElementById('supplierPhone').value = ''
+      document.getElementById('supplierAddress').value = ''
+      document.getElementById('supplierId').value = ''
+      
+      await writeLog('add_supplier', null, null, `เพิ่ม Supplier: ${name}`)
+    } catch(e) { alert('Error: ' + e.message) }
   }
-
-  try {
-    const { data, error } = await db.from('supplier').insert({ 
-      name, phone, address: addr, companyid: cid 
-    }).select()
-    
-    if (error) throw error
-    
-    // Fix: Update local state and refresh dropdowns
-    allsuppliers.push(data[0])
-    dropdowns['sd-supplier'].updateItems(allsuppliers.map(s => ({ label: s.name, value: s.id })))
-    
-    showToast('เพิ่ม Supplier สำเร็จ')
-    document.querySelectorAll('#page-bill .card:nth-child(1) input').forEach(i => i.value = '')
-    await writeLog('add_supplier', null, null, `เพิ่ม Supplier: ${name}`)
-  } catch(e) { alert('Error: ' + e.message) }
-}
-
 window.addType = async () => {
   const name = document.getElementById('typeName').value.trim()
   if (!name) return showToast('กรุณากรอกชื่อประเภท')
@@ -718,32 +724,27 @@ function renderBillTable() {
 window.removeItem = function(i) { billItems.splice(i, 1); renderBillTable() }
 
 window.saveBill = async function() {
-  if (cart.length === 0) return alert('กรุณาเพิ่มสินค้าลงในบิล')
-  
-  const supplierId = dropdowns['sd-supplier'].getValue()
-  const dueDate = document.getElementById('billDueDate').value
-  if (!supplierId || !dueDate) return alert('กรุณาเลือก Supplier และวันที่ครบกำหนด')
+    if (cart.length === 0) return alert('กรุณาเพิ่มสินค้าลงในบิล')
+    const supplierId = dropdowns['sd-supplier'].getValue()
+    const dueDate = document.getElementById('billDueDate').value
+    
+    if (!supplierId || !dueDate) return alert('กรุณาเลือก Supplier และวันที่ครบกำหนด')
+    const total = cart.reduce((sum, i) => sum + (i.cost * i.quantity), 0)
 
-  const total = cart.reduce((sum, i) => sum + (i.cost * i.quantity), 0)
-
-  try {
-    // Call the SQL function we just created
-    const { error } = await db.rpc('create_inward_bill', {
-      p_supplier_id: supplierId,
-      p_total_price: total,
-      p_due_date: dueDate,
-      p_items: cart // Pass the entire cart array
-    })
-
-    if (error) throw error
-
-    showToast('บันทึกบิลและอัปเดตสต็อกสำเร็จ')
-    cart = []; renderCart()
-    await writeLog('create_bill', null, null, `สร้างบิลใหม่ ยอดรวม: ${total}`)
-  } catch (e) {
-    alert('เกิดข้อผิดพลาด: ' + e.message)
+    try {
+      const { error } = await db.rpc('create_inward_bill', {
+        p_supplier_id: supplierId,
+        p_total_price: total,
+        p_due_date: dueDate,
+        p_items: cart
+      })
+      if (error) throw error
+      
+      showToast('บันทึกบิลและเพิ่มสต็อกสำเร็จ')
+      cart = []; renderCart()
+      await writeLog('create_bill', null, null, `สร้างบิลใหม่ ยอด: ${total} ฿`)
+    } catch (e) { alert('ล้มเหลว: ' + e.message) }
   }
-}
 
 // ===== BILL HISTORY =====
 window.renderBillHistory = async function() {
