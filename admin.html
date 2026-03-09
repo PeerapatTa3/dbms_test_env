@@ -717,53 +717,32 @@ function renderBillTable() {
 
 window.removeItem = function(i) { billItems.splice(i, 1); renderBillTable() }
 
-window.saveBill = async () => {
-  if (!billItems.length) return showToast('ไม่มีสินค้าในบิล')
-  const sup = dropdowns['sd-supplier'].getValue()
-  if (!sup) return showToast('กรุณาเลือก Supplier')
-  const duedate = document.getElementById('duedate').value
-  if (!duedate) return showToast('กรุณาใส่วันที่')
-  const totalCost = billItems.reduce((s, i) => s + i.cost, 0)
+window.saveBill = async function() {
+  if (cart.length === 0) return alert('กรุณาเพิ่มสินค้าลงในบิล')
+  
+  const supplierId = dropdowns['sd-supplier'].getValue()
+  const dueDate = document.getElementById('billDueDate').value
+  if (!supplierId || !dueDate) return alert('กรุณาเลือก Supplier และวันที่ครบกำหนด')
 
-  const { data: bill, error: e1 } = await db.from('billvoice').insert({
-    supplierid: Number(sup.value),
-    duedate:    duedate,
-    totalcost:  totalCost,
-    date:       new Date().toISOString()
-  }).select().single()
-  if (e1) return showToast('Error สร้างบิล: ' + e1.message)
+  const total = cart.reduce((sum, i) => sum + (i.cost * i.quantity), 0)
 
-  const rows = billItems.map(item => ({
-    billid:     bill.id,
-    productid:  item.productId,
-    locationid: item.locationId,
-    quantity:   item.quantity,
-    cost:       item.cost
-  }))
-  const { error: e2 } = await db.from('billvoice_item').insert(rows)
-  if (e2) return showToast('Error บันทึกรายการ: ' + e2.message)
+  try {
+    // Call the SQL function we just created
+    const { error } = await db.rpc('create_inward_bill', {
+      p_supplier_id: supplierId,
+      p_total_price: total,
+      p_due_date: dueDate,
+      p_items: cart // Pass the entire cart array
+    })
 
-  for (const item of billItems) {
-    const { data: existing } = await db.from('inventory')
-      .select('id, quantity')
-      .eq('nameid', item.productId)
-      .eq('locationid', item.locationId)
-      .maybeSingle()
-    if (existing) {
-      await db.from('inventory').update({ quantity: existing.quantity + item.quantity }).eq('id', existing.id)
-    } else {
-      await db.from('inventory').insert({ nameid: item.productId, locationid: item.locationId, quantity: item.quantity })
-    }
+    if (error) throw error
+
+    showToast('บันทึกบิลและอัปเดตสต็อกสำเร็จ')
+    cart = []; renderCart()
+    await writeLog('create_bill', null, null, `สร้างบิลใหม่ ยอดรวม: ${total}`)
+  } catch (e) {
+    alert('เกิดข้อผิดพลาด: ' + e.message)
   }
-
-  showToast('บันทึกบิลสำเร็จ')
-  await writeLog('create_bill', 'billvoice', bill.id,
-    `สร้างบิลขาเข้า #${String(bill.id).padStart(6,'0')} supplier: ${dropdowns['sd-supplier'].getValue()?.label || '—'} มูลค่า ${totalCost.toLocaleString()} ฿`
-  )
-  billItems = []
-  renderBillTable()
-  dropdowns['sd-supplier'].clear()
-  document.getElementById('duedate').value = ''
 }
 
 // ===== BILL HISTORY =====

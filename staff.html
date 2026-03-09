@@ -517,53 +517,41 @@ window.confirmSale = function() {
 window.closeSaleModal = () => document.getElementById('saleModal').classList.remove('open')
 
 window.saveSale = async function() {
-  const custId   = document.getElementById('customerSelect').value || null
-  const note     = document.getElementById('saleNote').value
-  const discount = Number(document.getElementById('saleDiscount').value) || 0
-  const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0)
-  const total    = Math.max(0, subtotal - discount)
-  lastCart = [...cart]
+  if (cart.length === 0) return alert('รถเข็นว่างเปล่า')
+  
+  const subtotal = cart.reduce((s, i) => s + (i.price * i.qty), 0)
+  const discountInput = document.getElementById('saleDiscount').value || 0
+  const discount = Math.min(subtotal, Number(discountInput)) // Prevent discount > total
+  const netTotal = subtotal - discount
+  const consumerId = dropdowns['sd-consumer'].getValue()
 
-  // 1. สร้าง salebill
-  const { data: bill, error } = await db.from('salebill').insert({
-    consumerid:  custId ? Number(custId) : null,
-    total_price: total,
-    discount,
-    status: 'pending',
-    date:   new Date().toISOString()
-  }).select().single()
-  if (error) return showToast('เกิดข้อผิดพลาด: ' + error.message)
+  try {
+    // Call the SQL Function (RPC)
+    const { data: billId, error } = await db.rpc('process_sale', {
+      p_consumer_id: consumerId || null,
+      p_subtotal: subtotal,
+      p_discount: discount,
+      p_net_total: netTotal,
+      p_items: cart.map(i => ({
+        product_id: i.productid,
+        quantity: i.qty,
+        unit_price: i.price
+      }))
+    })
 
-  // 2. insert salebill_item
-  await db.from('salebill_item').insert(
-    cart.map(item => ({ billid: bill.id, productid: item.productId, amount: item.quantity, unit_price: item.price }))
-  )
+    if (error) throw error
 
-  // 3. ตัดสต็อก inventory (FIFO ตาม location)
-  for (const item of cart) {
-    let remaining = item.quantity
-    const invItems = allInventory.filter(i => i.nameid === item.productId && i.quantity > 0)
-    for (const inv of invItems) {
-      if (remaining <= 0) break
-      const deduct = Math.min(inv.quantity, remaining)
-      await db.from('inventory').update({ quantity: inv.quantity - deduct }).eq('id', inv.id)
-      inv.quantity -= deduct
-      remaining   -= deduct
-    }
+    // Success Actions
+    showToast(`บันทึกการขายสำเร็จ บิล #${String(billId).padStart(6,'0')}`)
+    cart = []; renderCart()
+    await loadAll() // Refresh local stock numbers
+    
+    await writeLog('sale', 'salebill', billId, 
+      `ขายสินค้า รวม ${netTotal.toLocaleString()} ฿ (ส่วนลด ${discount} ฿)`)
+      
+  } catch (e) {
+    alert('ล้มเหลว: ' + e.message)
   }
-
-  const custName = custId ? allCustomers.find(c => c.id === Number(custId))?.name || 'ลูกค้าทั่วไป' : 'ลูกค้าทั่วไป'
-  await writeLog('sale', 'salebill', bill.id,
-    `ขายสินค้า #${String(bill.id).padStart(6,'0')} ลูกค้า: ${custName} รวม ${total.toLocaleString()} ฿ (${lastCart.length} รายการ)`
-  )
-  closeSaleModal()
-  printReceipt(custName, note, total, discount, String(bill.id))
-  cart = []
-  renderCart()
-  renderProductGrid()
-  document.getElementById('saleNote').value    = ''
-  document.getElementById('saleDiscount').value = '0'
-  showToast('บันทึกและออกบิลเรียบร้อย')
 }
 
 function printReceipt(customer, note, total, discount, billId) {
@@ -629,23 +617,48 @@ window.filterStock = function() {
 }
 
 // ===== BILLS =====
-window.renderBills = async function() {
-  const { data } = await db.from('salebill')
-    .select('id, date, status, total_price, discount, consumer(name)')
-    .order('date', { ascending: false })
-  allSaleBills = (data||[]).map(b => ({ ...b, customerName: b.consumer?.name || 'ลูกค้าทั่วไป' }))
-  filterBills()
+let billOffset = 0;
+const BILL_LIMIT = 20;
+
+async function renderBills(append = false) {
+  const list = document.getElementById('billList')
+  if (!append) {
+    billOffset = 0;
+    list.innerHTML = '<div class="loading-spin">กำลังโหลด...</div>'
+  }
+
+  const { data, error } = await db.from('salebill')
+    .select('*, consumer(name)')
+    .order('created_at', { ascending: false })
+    .range(billOffset, billOffset + BILL_LIMIT - 1)
+
+  if (error) return list.innerHTML = 'โหลดข้อมูลไม่สำเร็จ'
+  
+  const html = data.map(b => `
+    <div class="bill-card">
+      <div class="bill-header">
+        <strong>#${String(b.id).padStart(6,'0')}</strong>
+        <span class="status-badge ${b.status}">${b.status}</span>
+      </div>
+      <div class="bill-body">
+        <p>ลูกค้า: ${b.consumer?.name || 'ลูกค้าทั่วไป'}</p>
+        <p>ยอดสุทธิ: <strong>${b.nettotal.toLocaleString()} ฿</strong></p>
+        <small>${new Date(b.created_at).toLocaleString('th-TH')}</small>
+      </div>
+      <button class="btn btn-info" onclick="viewBillDetail(${b.id})">รายละเอียด</button>
+    </div>
+  `).join('')
+
+  if (append) {
+    list.insertAdjacentHTML('beforeend', html)
+  } else {
+    list.innerHTML = html + `<button class="btn" onclick="loadMoreBills()" style="width:100%; margin-top:10px;">โหลดเพิ่ม...</button>`
+  }
 }
 
-window.filterBills = function() {
-  const q  = (document.getElementById('billSearch')?.value || '').toLowerCase()
-  const st = document.getElementById('billStatusFilter')?.value || ''
-  let filtered = allSaleBills.filter(b => {
-    if (q  && !b.customerName.toLowerCase().includes(q) && !String(b.id).includes(q)) return false
-    if (st && b.status !== st) return false
-    return true
-  })
-  renderBillsGrid(filtered)
+window.loadMoreBills = function() {
+  billOffset += BILL_LIMIT;
+  renderBills(true);
 }
 
 async function renderBillsGrid(bills) {
