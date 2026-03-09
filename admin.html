@@ -443,8 +443,8 @@ tr:hover td{background:#1a1a1a}
 // ============================================================
 //  Supabase Config — เปลี่ยนค่าตรงนี้ถ้าต้องการ
 // ============================================================
-const SUPABASE_URL = 'https://xxhfqxrehsummjmpkoxu.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4aGZxeHJlaHN1bW1qbXBrb3h1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MDI5NjYsImV4cCI6MjA4ODE3ODk2Nn0.ioFvUUwPddFPUQeDT2CWydTLmI2s-Pd_N_viEFSHSvg'
+const SUPABASE_URL = 'https://ndzeyyvzmivhtjfqgibf.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_a6HQjfPhDERbK5WxZMvegg_ulRMLRbm'
 // ============================================================
 
 const { createClient } = supabase
@@ -543,10 +543,21 @@ createSD('sd-location', 'เลือก Location')
 createSD('sd-nameType', 'เลือก Type')
 createSD('sd-editType', 'เลือก Type')
 
-dropdowns['sd-type'].setOnChange(sel => {
-  const typeId = Number(sel.value)
-  dropdowns['sd-name'].setItems(allproducts.filter(p => p.typeid === typeId).map(p => ({ value: String(p.id), label: p.name })))
-  dropdowns['sd-name'].clear()
+// Ensure strict type handling in the Type-to-Product filter
+dropdowns['sd-type'].setOnChange((val) => {
+  // Clear dependent dropdowns
+  dropdowns['sd-name'].updateItems([])
+  
+  if (!val) return
+  
+  // Convert val to Number if your database IDs are numeric
+  const selectedTypeId = Number(val) 
+  const filtered = allproducts.filter(p => Number(p.type_id) === selectedTypeId)
+  
+  dropdowns['sd-name'].updateItems(filtered.map(p => ({ 
+    label: p.name, 
+    value: p.id 
+  })))
 })
 
 // ===== LOAD DATA =====
@@ -591,17 +602,33 @@ async function loadInventory() {
 }
 
 // ===== ADD MASTER DATA =====
-window.addsupplier = async () => {
-  const name      = document.getElementById('supplierName').value.trim()
-  const phone     = document.getElementById('supplierPhone').value.trim()
-  const address   = document.getElementById('supplierAddress').value.trim()
-  const companyid = document.getElementById('supplierId').value.trim()
-  if (!name) return showToast('กรุณากรอกชื่อบริษัท')
-  const { error } = await db.from('supplier').insert({ suppliername: name, phone, address, companyid })
-  if (error) return showToast('Error: ' + error.message)
-  ;['supplierName','supplierPhone','supplierAddress','supplierId'].forEach(id => document.getElementById(id).value = '')
-  await loadsuppliers()
-  showToast('เพิ่ม Supplier เรียบร้อย')
+// Updated addsupplier with validation and instant UI update
+window.addsupplier = async function() {
+  const name = document.getElementById('supplierName').value.trim()
+  const phone = document.getElementById('supplierPhone').value.trim()
+  const addr = document.getElementById('supplierAddress').value.trim()
+  const cid = document.getElementById('supplierId').value.trim()
+
+  // Input Validation
+  if (!name || phone.length !== 10 || cid.length !== 13) {
+    return alert('กรุณากรอกข้อมูลให้ครบ (เบอร์โทร 10 หลัก, รหัสบริษัท 13 หลัก)')
+  }
+
+  try {
+    const { data, error } = await db.from('supplier').insert({ 
+      name, phone, address: addr, companyid: cid 
+    }).select()
+    
+    if (error) throw error
+    
+    // Fix: Update local state and refresh dropdowns
+    allsuppliers.push(data[0])
+    dropdowns['sd-supplier'].updateItems(allsuppliers.map(s => ({ label: s.name, value: s.id })))
+    
+    showToast('เพิ่ม Supplier สำเร็จ')
+    document.querySelectorAll('#page-bill .card:nth-child(1) input').forEach(i => i.value = '')
+    await writeLog('add_supplier', null, null, `เพิ่ม Supplier: ${name}`)
+  } catch(e) { alert('Error: ' + e.message) }
 }
 
 window.addType = async () => {
@@ -624,18 +651,28 @@ window.addLocation = async () => {
   showToast('เพิ่ม Location เรียบร้อย')
 }
 
-window.addproduct = async () => {
-  const sel   = dropdowns['sd-nameType'].getValue()
-  if (!sel) return showToast('กรุณาเลือก Type')
-  const name  = document.getElementById('productName').value.trim()
-  const price = Number(document.getElementById('productPrice').value) || 0
-  if (!name) return showToast('กรุณากรอกชื่อสินค้า')
-  const { error } = await db.from('product').insert({ name, price, typeid: Number(sel.value) })
-  if (error) return showToast('Error: ' + error.message)
-  document.getElementById('productName').value  = ''
-  document.getElementById('productPrice').value = ''
-  await loadproducts()
-  showToast('เพิ่มสินค้าเรียบร้อย')
+window.addproduct = async function() {
+  const name = document.getElementById('productName').value.trim()
+  const price = document.getElementById('productPrice').value
+  const typeId = dropdowns['sd-nameType'].getValue()
+  
+  if (!name || !price || !typeId) return alert('กรุณากรอกข้อมูลให้ครบ')
+
+  try {
+    const { data, error } = await db.from('product').insert({ 
+      name, price: Number(price), type_id: typeId 
+    }).select()
+    
+    if (error) throw error
+    
+    // Fix: Update local products array so it appears in the bill creator
+    allproducts.push(data[0])
+    
+    showToast('เพิ่มสินค้าสำเร็จ')
+    document.getElementById('productName').value = ''
+    document.getElementById('productPrice').value = ''
+    await writeLog('add_product', null, null, `เพิ่มสินค้า: ${name}`)
+  } catch(e) { alert('Error: ' + e.message) }
 }
 
 // ===== BILL CART =====
@@ -1086,40 +1123,63 @@ window.openCancelBillModal = function(billId, supplierName, totalcost) {
 }
 
 window.confirmCancelBill = async function() {
-  if (!pendingCancelBillId) return
-  const billId = pendingCancelBillId
-  const { data: items, error: e1 } = await db.from('billvoice_item').select('productid, locationid, quantity').eq('billid', billId)
-  if (e1) { showToast('Error โหลดรายการ: ' + e1.message); return }
-  for (const item of (items || [])) {
-    const { data: inv } = await db.from('inventory').select('id, quantity').eq('nameid', item.productid).eq('locationid', item.locationid).maybeSingle()
-    if (inv) {
-      const newQty = Math.max(0, inv.quantity - item.quantity)
-      await db.from('inventory').update({ quantity: newQty }).eq('id', inv.id)
+  const id = pendingCancelBill
+  if (!id) return
+
+  try {
+    // 1. Check if bill is already cancelled to prevent double-deduction
+    const { data: bill } = await db.from('inward_bills').select('status').eq('id', id).single()
+    if (bill.status === 'cancelled') {
+      alert('บิลนี้ถูกยกเลิกไปแล้ว')
+      return closeModal('cancelBillModal')
     }
-  }
-  const { error: e2 } = await db.from('billvoice').update({ status: 'cancelled' }).eq('id', billId)
-  if (e2) { showToast('Error ยกเลิกบิล: ' + e2.message); return }
-  const billData = allBillsDisplay.find(b => b.id === billId)
-  await writeLog('cancel_bill', 'billvoice', billId,
-    `ยกเลิกบิลขาเข้า #${String(billId).padStart(6,'0')} supplier: ${billData?.supplierName || '—'} มูลค่า ${Number(billData?.totalcost||0).toLocaleString()} ฿`
-  )
-  closeModal('cancelBillModal'); pendingCancelBillId = null; showToast(`ยกเลิกบิล #${String(billId).padStart(6,'0')} เรียบร้อย`);
-  await renderBillHistory()
+
+    // 2. Fetch items to reverse stock
+    const { data: items } = await db.from('bill_items').select('*').eq('bill_id', id)
+    
+    for (let it of items) {
+      // Find current stock record
+      const { data: stock } = await db.from('inventory')
+        .select('quantity')
+        .match({ product_id: it.product_id, location_id: it.location_id })
+        .single()
+      
+      if (stock) {
+        const newQty = Math.max(0, stock.quantity - it.quantity)
+        await db.from('inventory')
+          .update({ quantity: newQty })
+          .match({ product_id: it.product_id, location_id: it.location_id })
+      }
+    }
+
+    // 3. Update Bill Status
+    await db.from('inward_bills').update({ status: 'cancelled' }).eq('id', id)
+    
+    showToast('ยกเลิกบิลสำเร็จ')
+    closeModal('cancelBillModal')
+    renderBillHistory() // Refresh the list
+  } catch(e) { alert('Error: ' + e.message) }
 }
 
 // ===== LOG PAGE =====
 let allLogData = []
-window.renderLog = async function() {
-  document.getElementById('logList').innerHTML = '<div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div>'
-  const { data, error } = await db.from('log').select('*').order('created_at', { ascending: false }).limit(500)
-  if (error) { console.error('renderLog:', error.message); return }
-  allLogData = data || []
-  const today = new Date().toDateString()
-  document.getElementById('logCountAll').textContent   = allLogData.length
-  document.getElementById('logCountToday').textContent = allLogData.filter(l => new Date(l.created_at).toDateString() === today).length
-  document.getElementById('logCountBill').textContent  = allLogData.filter(l => l.action === 'create_bill').length
-  document.getElementById('logCountSale').textContent  = allLogData.filter(l => l.action === 'sale').length
-  filterLog()
+async function renderLog() {
+  const list = document.getElementById('logList')
+  list.innerHTML = `<div class="loading-spin"><div class="spinner"></div>กำลังโหลด...</div>`
+  
+  try {
+    // Fix: Added limit(100) and proper ordering
+    const { data, error } = await db.from('log')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100) 
+      
+    if (error) throw error
+    allLogs = data
+    filterLog() // This handles the actual HTML rendering
+  } catch(e) { 
+    list.innerHTML = `<div class="empty">โหลดข้อมูลไม่สำเร็จ: ${e.message}</div>` 
+  }
 }
 
 window.filterLog = function() {
